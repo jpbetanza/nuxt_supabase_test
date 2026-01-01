@@ -34,9 +34,9 @@ vi.mock('vue-router', () => ({
 // Simulação das funções da página de confirmação
 const createConfirmPage = () => {
   // Estados reativos simulados
-  let loading = ref(true)
-  let success = ref(false)
-  let error = ref<string | null>(null)
+  const loading = ref(true)
+  const success = ref(false)
+  const error = ref<string | null>(null)
 
   // Função de confirmação de email
   const confirmEmail = async () => {
@@ -64,8 +64,9 @@ const createConfirmPage = () => {
       } else {
         throw new Error('Não foi possível confirmar o email')
       }
-    } catch (err: any) {
-      error.value = err.message || 'Erro ao confirmar email'
+    } catch (err: unknown) {
+      const message = err && typeof err === 'object' && 'message' in err ? (err as { message: string }).message : undefined
+      error.value = message || 'Erro ao confirmar email'
       mockToast.add({
         title: 'Erro',
         description: error.value,

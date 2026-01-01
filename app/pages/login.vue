@@ -1,6 +1,18 @@
 <script setup lang="ts">
 import type { FormSubmitEvent, AuthFormField } from '@nuxt/ui'
 
+// Tipos para os dados dos formulários
+interface LoginData {
+  email: string
+  password: string
+}
+
+interface RegisterData {
+  email: string
+  password: string
+  confirmPassword: string
+}
+
 const supabase = useSupabaseClient()
 const toast = useToast()
 
@@ -14,7 +26,7 @@ const loading = ref(false)
 const authError = ref<string>('')
 
 // Função de validação para login
-const validateLogin = (data: any) => {
+const validateLogin = (data: LoginData) => {
   const errors: string[] = []
 
   if (!data.email || !data.email.includes('@')) {
@@ -29,7 +41,7 @@ const validateLogin = (data: any) => {
 }
 
 // Função de validação para cadastro
-const validateRegister = (data: any) => {
+const validateRegister = (data: RegisterData) => {
   const errors: string[] = []
 
   if (!data.email || !data.email.includes('@')) {
@@ -91,7 +103,7 @@ const registerFields: AuthFormField[] = [
 ]
 
 // Função de login
-const handleLogin = async (payload: FormSubmitEvent<any>) => {
+const handleLogin = async (payload: FormSubmitEvent<LoginData>) => {
   loading.value = true
   authError.value = ''
 
@@ -119,9 +131,9 @@ const handleLogin = async (payload: FormSubmitEvent<any>) => {
 
     // Redirecionar para a página inicial
     await navigateTo('/')
-
-  } catch (error: any) {
-    authError.value = error.message || 'Erro ao fazer login'
+  } catch (error: unknown) {
+    const message = error && typeof error === 'object' && 'message' in error ? (error as { message: string }).message : undefined
+    authError.value = message || 'Erro ao fazer login'
     toast.add({
       title: 'Erro',
       description: authError.value,
@@ -133,7 +145,7 @@ const handleLogin = async (payload: FormSubmitEvent<any>) => {
 }
 
 // Função de cadastro
-const handleRegister = async (payload: FormSubmitEvent<any>) => {
+const handleRegister = async (payload: FormSubmitEvent<RegisterData>) => {
   loading.value = true
   authError.value = ''
 
@@ -164,9 +176,9 @@ const handleRegister = async (payload: FormSubmitEvent<any>) => {
 
     // Alternar para modo de login após cadastro
     isLogin.value = true
-
-  } catch (error: any) {
-    authError.value = error.message || 'Erro ao criar conta'
+  } catch (error: unknown) {
+    const message = error && typeof error === 'object' && 'message' in error ? (error as { message: string }).message : undefined
+    authError.value = message || 'Erro ao criar conta'
     toast.add({
       title: 'Erro',
       description: authError.value,
@@ -190,24 +202,24 @@ const toggleMode = () => {
       <!-- Abas para alternar entre Login e Cadastro -->
       <div class="flex border-b border-gray-200 dark:border-gray-700 mb-6">
         <button
-          @click="isLogin = true"
           :class="[
             'flex-1 py-3 px-4 text-center font-medium transition-colors',
             isLogin
               ? 'text-primary border-b-2 border-primary'
               : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
           ]"
+          @click="isLogin = true"
         >
           Entrar
         </button>
         <button
-          @click="isLogin = false"
           :class="[
             'flex-1 py-3 px-4 text-center font-medium transition-colors',
             !isLogin
               ? 'text-primary border-b-2 border-primary'
               : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
           ]"
+          @click="isLogin = false"
         >
           Cadastrar
         </button>
@@ -240,8 +252,8 @@ const toggleMode = () => {
             <UButton
               variant="link"
               size="sm"
-              @click="toggleMode"
               class="p-0 h-auto font-medium"
+              @click="toggleMode"
             >
               Cadastre-se aqui
             </UButton>
@@ -276,8 +288,8 @@ const toggleMode = () => {
             <UButton
               variant="link"
               size="sm"
-              @click="toggleMode"
               class="p-0 h-auto font-medium"
+              @click="toggleMode"
             >
               Faça login aqui
             </UButton>
@@ -287,4 +299,3 @@ const toggleMode = () => {
     </UPageCard>
   </div>
 </template>
-    
