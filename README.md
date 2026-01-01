@@ -58,3 +58,93 @@ pnpm preview
 ```
 
 Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+
+## CI/CD e Docker
+
+Este projeto inclui configuração completa de CI/CD com GitHub Actions para deploy automatizado no Docker Hub.
+
+### Workflows Disponíveis
+
+#### 🚀 Deploy Homologação (`deploy-homologacao.yml`)
+- **Trigger**: Push nas branches `staging` ou `develop`
+- **Funcionalidades**:
+  - ✅ Testes unitários com cobertura
+  - ✅ Type checking
+  - ✅ Linting (ESLint)
+  - ✅ Build da aplicação
+  - ✅ Build e push da imagem Docker
+  - ✅ Suporte multi-plataforma (AMD64/ARM64)
+  - ✅ Cache de build para otimização
+
+**Tags geradas**: `staging-latest`, `homologacao`, `staging-<commit-sha>`
+
+#### 🎯 Deploy Produção (`deploy-production.yml`)
+- **Trigger**: Push na branch `main` ou manual via workflow_dispatch
+- **Funcionalidades**:
+  - ✅ Todos os testes do workflow de homologação
+  - ✅ Scan de vulnerabilidades (Trivy)
+  - ✅ Build e push da imagem Docker
+  - ✅ Attestation de build (segurança)
+  - ✅ SBOM (Software Bill of Materials)
+  - ✅ Criação automática de GitHub Release (opcional)
+  - ✅ Suporte multi-plataforma (AMD64/ARM64)
+
+**Tags geradas**: `latest`, `production`, `main-<commit-sha>`, versão customizada
+
+### Configuração de Secrets
+
+Para que os workflows funcionem, configure os seguintes secrets no repositório GitHub:
+
+```bash
+DOCKERHUB_USERNAME=seu_usuario_dockerhub
+DOCKERHUB_PASSWORD=seu_token_dockerhub
+```
+
+### Como Obter Token do Docker Hub
+
+1. Acesse [Docker Hub](https://hub.docker.com/)
+2. Vá em Account Settings → Security
+3. Clique em "New Access Token"
+4. Defina um nome descritivo (ex: `github-actions`)
+5. Copie o token gerado
+6. Adicione como `DOCKERHUB_PASSWORD` no GitHub
+
+### Branches e Deploys
+
+- **`main`**: Produção - deploy automático
+- **`staging`** ou **`develop`**: Homologação - deploy automático
+- **Pull Requests**: Build de teste (sem deploy)
+
+### Imagens Docker
+
+As imagens são publicadas no Docker Hub com o padrão:
+```
+docker.io/SEU_USERNAME/nuxt-supabase-test:TAG
+```
+
+**Exemplos de uso**:
+
+```bash
+# Produção
+docker run -p 80:80 docker.io/SEU_USERNAME/nuxt-supabase-test:latest
+
+# Homologação
+docker run -p 80:80 docker.io/SEU_USERNAME/nuxt-supabase-test:staging-latest
+
+# Versão específica
+docker run -p 80:80 docker.io/SEU_USERNAME/nuxt-supabase-test:v1.0.0
+```
+
+### Arquivos de Configuração
+
+- **`.github/workflows/deploy-homologacao.yml`**: Workflow de homologação
+- **`.github/workflows/deploy-production.yml`**: Workflow de produção
+- **`Dockerfile`**: Configuração multi-stage para Nuxt.js SPA
+- **`.dockerignore`**: Otimização do contexto de build
+
+### Recursos Adicionais
+
+- 🔒 **Segurança**: Scan de vulnerabilidades com Trivy
+- 🚀 **Performance**: Build cache e multi-plataforma
+- 📊 **Monitoramento**: Cobertura de testes e relatórios
+- 🔄 **Automação**: Deploy automático baseado em branches
