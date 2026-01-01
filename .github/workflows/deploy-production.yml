@@ -114,7 +114,7 @@ jobs:
             type=sha,prefix=main-
             type=raw,value=latest
             type=raw,value=production
-            type=raw,value=${{ inputs.tag_version || format('v{0}', github.run_number) }},enable=${{ isNaN(inputs.tag_version) }}
+            type=raw,value=${{ inputs.tag_version || format('v{0}', github.run_number) }},enable=${{ inputs.tag_version != '' }}
 
       - name: Build and push Docker image
         id: push
