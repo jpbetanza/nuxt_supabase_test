@@ -269,6 +269,304 @@ toast.add({
 
 **❌ Não use:** `'green'`, `'red'`, `'blue'`, etc. - use sempre os valores do enum.
 
+## 🔍 SEO (Search Engine Optimization)
+
+### Princípios Básicos de SEO
+
+**SEO Genérico** visa otimizar a aplicação para motores de busca de forma independente do produto específico, utilizando boas práticas universais que se aplicam a qualquer SaaS ou plataforma digital.
+
+#### 1. **Meta Tags Essenciais**
+```typescript
+// app.vue - Meta tags globais
+useSeoMeta({
+  title: 'Plataforma SaaS - Soluções Empresariais Completas',
+  description: 'Transforme seu negócio com nossa plataforma completa. Automatize processos, aumente produtividade e impulsione resultados. Soluções empresariais inovadoras.',
+  keywords: 'plataforma saas, soluções empresariais, automação, produtividade, gestão empresarial, transformação digital',
+  ogTitle: 'Plataforma SaaS - Soluções Empresariais Completas',
+  ogDescription: 'Descubra como nossa plataforma pode revolucionar seu negócio. Automatize processos e aumente sua produtividade.',
+  ogImage: '/og-image.png',
+  twitterCard: 'summary_large_image',
+  twitterTitle: 'Plataforma SaaS - Transforme seu Negócio',
+  twitterDescription: 'Soluções empresariais completas para automatizar processos e aumentar produtividade.',
+  author: 'Plataforma SaaS'
+})
+```
+
+#### 2. **Estrutura de URLs Amigáveis**
+```typescript
+// pages/dashboard.vue
+definePageMeta({
+  title: 'Dashboard - Visão Geral do Sistema',
+  description: 'Acompanhe métricas importantes, gerencie projetos e visualize relatórios em tempo real.',
+})
+
+// Resultado: /dashboard
+// Meta title: "Dashboard - Visão Geral do Sistema | Plataforma SaaS"
+```
+
+#### 3. **Headings Hierárquicos**
+```vue
+<template>
+  <div>
+    <h1>Transforme seu Negócio com Nossa Plataforma</h1>
+    <h2>Funcionalidades Principais</h2>
+    <h3>Dashboard Interativo</h3>
+    <h3>Relatórios Avançados</h3>
+    <h2>Vantagens Competitivas</h2>
+    <h3>Performance Superior</h3>
+    <h3>Segurança Avançada</h3>
+  </div>
+</template>
+```
+
+### Como o Nuxt Otimiza SEO
+
+#### **Server-Side Rendering (SSR)**
+O Nuxt 4 renderiza páginas no servidor por padrão, garantindo que:
+- ✅ **Conteúdo indexável**: Motores de busca veem HTML completo
+- ✅ **Velocidade inicial**: First Contentful Paint mais rápido
+- ✅ **SEO crawler-friendly**: Bots conseguem indexar facilmente
+
+#### **Meta Tags Automáticas**
+```typescript
+// Nuxt gera automaticamente:
+<title>Plataforma SaaS - Soluções Empresariais Completas</title>
+<meta name="description" content="Transforme seu negócio...">
+<meta property="og:title" content="Plataforma SaaS...">
+<link rel="canonical" href="https://seudominio.com/pagina">
+```
+
+#### **Route-Based Meta**
+```typescript
+// pages/solutions.vue
+definePageMeta({
+  title: 'Soluções Empresariais - Plataforma SaaS',
+  description: 'Descubra nossas soluções completas para otimizar processos empresariais.',
+  keywords: ['soluções empresariais', 'otimização processos', 'automação empresarial']
+})
+```
+
+### Palavras-Chave Estratégicas
+
+#### **Primárias (High-Volume)**
+- plataforma saas
+- soluções empresariais
+- automação processos
+- gestão empresarial
+- transformação digital
+
+#### **Secundárias (Long-Tail)**
+- como automatizar processos empresariais
+- soluções para aumentar produtividade
+- plataforma de gestão empresarial
+- transformação digital empresas
+- ferramentas para otimização de processos
+
+#### **Técnicas de Otimização**
+```vue
+<template>
+  <!-- ✅ Bom: Keywords naturais no conteúdo -->
+  <p>Nossa <strong>plataforma SaaS</strong> oferece <strong>soluções empresariais</strong>
+  completas para <strong>automação de processos</strong> e <strong>gestão empresarial</strong>.</p>
+
+  <!-- ✅ Bom: URLs descritivas -->
+  <NuxtLink to="/solutions/automacao-processos">
+    Automação de Processos
+  </NuxtLink>
+
+  <!-- ✅ Bom: Alt texts descritivos -->
+  <img src="/dashboard-preview.png" alt="Dashboard da plataforma com métricas e gráficos interativos">
+</template>
+```
+
+### Performance e Core Web Vitals
+
+#### **Largest Contentful Paint (LCP)**
+```typescript
+// Otimização de imagens
+<template>
+  <NuxtImg
+    src="/hero-image.jpg"
+    alt="Plataforma SaaS em ação"
+    width="1200"
+    height="600"
+    loading="eager"
+    format="webp"
+  />
+</template>
+```
+
+#### **First Input Delay (FID)**
+```typescript
+// Carregamento lazy de componentes
+<template>
+  <div>
+    <HeroSection />
+    <LazyFeaturesSection />
+    <LazyTestimonialsSection />
+  </div>
+</template>
+```
+
+#### **Cumulative Layout Shift (CLS)**
+```typescript
+// Reserve espaço para imagens
+<template>
+  <div class="aspect-video bg-gray-100 rounded-lg">
+    <NuxtImg
+      src="/video-thumbnail.jpg"
+      alt="Demonstração da plataforma"
+      class="w-full h-full object-cover rounded-lg"
+    />
+  </div>
+</template>
+```
+
+### Técnicas Avançadas de SEO
+
+#### **1. Schema.org Structured Data**
+```typescript
+// pages/index.vue
+useJsonld({
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'Plataforma SaaS',
+  description: 'Soluções empresariais completas para automação e gestão',
+  applicationCategory: 'BusinessApplication',
+  operatingSystem: 'Web Browser',
+  offers: {
+    '@type': 'Offer',
+    priceCurrency: 'BRL',
+    price: '0',
+    description: 'Plano gratuito disponível'
+  }
+})
+```
+
+#### **2. Sitemap Dinâmico**
+```typescript
+// server/api/sitemap.xml.ts
+export default defineSitemapEventHandler(async () => {
+  const posts = await $fetch('/api/posts')
+
+  return posts.map(post => ({
+    loc: `/posts/${post.slug}`,
+    lastmod: post.updatedAt,
+    changefreq: 'weekly',
+    priority: 0.8
+  }))
+})
+```
+
+#### **3. Robots.txt Otimizado**
+```typescript
+// public/robots.txt
+User-agent: *
+Allow: /
+
+# Bloquear páginas admin
+Disallow: /admin
+Disallow: /api/private
+
+# Sitemap
+Sitemap: https://seudominio.com/sitemap.xml
+```
+
+#### **4. Breadcrumbs Estruturados**
+```vue
+<template>
+  <nav aria-label="Breadcrumb" class="flex mb-6">
+    <ol class="flex items-center space-x-2">
+      <li>
+        <NuxtLink to="/" class="text-primary hover:underline">Início</NuxtLink>
+      </li>
+      <li class="text-gray-500">/</li>
+      <li>
+        <NuxtLink to="/solutions" class="text-primary hover:underline">Soluções</NuxtLink>
+      </li>
+      <li class="text-gray-500">/</li>
+      <li class="text-gray-900 font-medium" aria-current="page">Automação</li>
+    </ol>
+  </nav>
+</template>
+```
+
+### Monitoramento e Analytics
+
+#### **Google Search Console**
+- ✅ **Indexação**: Monitore quais páginas estão indexadas
+- ✅ **Performance**: Acompanhe posições e cliques
+- ✅ **Rich Results**: Teste structured data
+- ✅ **Mobile Usability**: Verifique compatibilidade mobile
+
+#### **Core Web Vitals Tracking**
+```typescript
+// plugins/analytics.client.ts
+export default defineNuxtPlugin(() => {
+  // Google Analytics 4
+  // Monitoramento de Core Web Vitals
+})
+```
+
+### Checklist de SEO por Página
+
+#### **Obrigatório**
+- [ ] Title tag único e descritivo (< 60 caracteres)
+- [ ] Meta description atraente (< 160 caracteres)
+- [ ] URL amigável (usar hífens, não underscores)
+- [ ] Heading principal (H1) único
+- [ ] Conteúdo relevante com keywords naturais
+- [ ] Imagens com alt text descritivo
+- [ ] Link canônico quando necessário
+
+#### **Recomendado**
+- [ ] Structured data (Schema.org)
+- [ ] Open Graph tags para redes sociais
+- [ ] Twitter Cards
+- [ ] Sitemap submission
+- [ ] Internal linking estratégico
+- [ ] External links para autoridade
+
+#### **Avançado**
+- [ ] Page Speed Insights otimizado
+- [ ] Mobile-first design
+- [ ] HTTPS obrigatório
+- [ ] Lazy loading implementado
+- [ ] CDN para assets estáticos
+
+### SEO Local e Internacional
+
+#### **Hreflang para Multi-idioma**
+```typescript
+// Para sites multi-idioma
+definePageMeta({
+  alternates: {
+    'pt-BR': '/soluções',
+    'en-US': '/solutions',
+    'es-ES': '/soluciones'
+  }
+})
+```
+
+#### **SEO Local**
+```typescript
+useJsonld({
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'Plataforma SaaS',
+  address: {
+    '@type': 'PostalAddress',
+    addressCountry: 'BR',
+    addressRegion: 'SP',
+    addressLocality: 'São Paulo'
+  }
+})
+```
+
+---
+
+**SEO Genérico**: Implemente essas práticas independente do produto específico. Elas garantem boa indexação e posicionamento orgânico nos motores de busca.
+
 ## 🗄️ Padrões de Banco de Dados
 
 ### Queries Supabase

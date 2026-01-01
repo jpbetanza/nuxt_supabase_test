@@ -7,20 +7,20 @@ useHead({
     { rel: 'icon', href: '/favicon.ico' }
   ],
   htmlAttrs: {
-    lang: 'en'
+    lang: 'pt'
   }
 })
 
-const title = 'Nuxt Supabase Test'
-const description = 'Teste de autenticação com Supabase e Nuxt UI.'
+const title = 'Plataforma SaaS'
+const description = 'Transforme seu dia a dia com nossa plataforma completa de soluções empresariais.'
 
 useSeoMeta({
   title,
   description,
   ogTitle: title,
   ogDescription: description,
-  ogImage: 'https://ui.nuxt.com/assets/templates/nuxt/starter-light.png',
-  twitterImage: 'https://ui.nuxt.com/assets/templates/nuxt/starter-light.png',
+  ogImage: '/og-image.png',
+  twitterImage: '/og-image.png',
   twitterCard: 'summary_large_image'
 })
 </script>
@@ -29,24 +29,32 @@ useSeoMeta({
   <UApp>
     <UHeader>
       <template #left>
-        <NuxtLink to="/">
-          <AppLogo class="w-auto h-6 shrink-0" />
+        <NuxtLink to="/" class="flex items-center space-x-2">
+          <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+            <UIcon name="i-lucide-zap" class="w-5 h-5 text-white dark:text-white" />
+          </div>
+          <span class="font-semibold text-lg">Plataforma SaaS</span>
         </NuxtLink>
-
-        <TemplateMenu />
       </template>
 
       <template #right>
         <UColorModeButton />
 
         <UButton
-          to="https://github.com/jpbetanza"
-          target="_blank"
-          icon="i-simple-icons-github"
-          aria-label="GitHub"
-          color="neutral"
-          variant="ghost"
-        />
+          to="/login"
+          variant="subtle"
+          size="sm"
+        >
+          Entrar
+        </UButton>
+
+        <UButton
+          to="/login"
+          color="primary"
+          size="sm"
+        >
+          Começar
+        </UButton>
       </template>
     </UHeader>
 
@@ -57,19 +65,21 @@ useSeoMeta({
     <UFooter>
       <template #left>
         <p class="text-sm text-muted">
-          Feito com Nuxt UI • © {{ new Date().getFullYear() }}
+          © {{ new Date().getFullYear() }} Plataforma SaaS. Todos os direitos reservados.
         </p>
       </template>
 
       <template #right>
-        <UButton
-          to="https://github.com/nuxt-ui-templates/starter"
-          target="_blank"
-          icon="i-simple-icons-github"
-          aria-label="GitHub"
-          color="neutral"
-          variant="ghost"
-        />
+        <div class="flex items-center space-x-4">
+          <span class="text-sm text-muted">Suporte • Privacidade • Termos</span>
+          <UButton
+            to="mailto:contato@plataformasaas.com"
+            variant="ghost"
+            size="xs"
+            icon="i-lucide-mail"
+            aria-label="Contato"
+          />
+        </div>
       </template>
     </UFooter>
   </UApp>
