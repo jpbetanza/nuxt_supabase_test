@@ -8,6 +8,7 @@ Este documento serve como referência para AIs desenvolvendo novas funcionalidad
 - **Nuxt 4** - Framework Vue.js full-stack com SSR/SSG
 - **Nuxt UI** - Biblioteca de componentes acessíveis e responsivos
 - **Supabase** - Backend-as-a-Service (banco de dados PostgreSQL + autenticação)
+- **Stripe** - Plataforma de pagamentos via módulo `@unlok-co/nuxt-stripe`
 - **TypeScript** - Tipagem estática
 - **Tailwind CSS** - Framework CSS (integrado ao Nuxt UI)
 - **ESLint** - Linting e formatação de código
@@ -43,7 +44,26 @@ package.json          # Dependências e scripts
 - `mcp_supabase_apply_migration` - Aplicar migrations
 - `mcp_supabase_get_advisors` - Verificar vulnerabilidades e performance
 
-### 2. MCP Nuxt (`mcp_nuxt_*`)
+### 2. MCP Stripe (`mcp_stripe_*`)
+- **Uso:** Documentação oficial do Stripe, integração de pagamentos, produtos Stripe
+- **Quando usar:**
+  - Antes de implementar funcionalidades de pagamento
+  - Para entender produtos Stripe (Payments, Billing, Connect, etc.)
+  - Para verificar métodos de pagamento disponíveis
+  - Para consultar APIs e exemplos de implementação
+  - Para entender fluxos de pagamento e melhores práticas
+
+**Comandos essenciais:**
+- `mcp_stripe_search_stripe_documentation` - Buscar documentação oficial do Stripe
+- `mcp_stripe_get_stripe_account_info` - Informações da conta Stripe conectada
+- `mcp_stripe_list_customers` - Listar clientes
+- `mcp_stripe_list_products` - Listar produtos
+- `mcp_stripe_list_prices` - Listar preços
+- `mcp_stripe_list_payment_intents` - Listar intents de pagamento
+- `mcp_stripe_list_subscriptions` - Listar assinaturas
+- `mcp_stripe_retrieve_balance` - Ver saldo da conta
+
+### 3. MCP Nuxt (`mcp_nuxt_*`)
 - **Uso:** Documentação e guias do Nuxt
 - **Quando usar:**
   - Antes de implementar novas páginas ou rotas
@@ -72,7 +92,13 @@ package.json          # Dependências e scripts
 ### 1. Planejamento da Funcionalidade
 ```bash
 # Sempre comece verificando os servidores MCP relevantes
-# Exemplo: Para uma nova página com formulário
+
+# Para funcionalidades de pagamento:
+1. mcp_stripe_search_stripe_documentation (consultar documentação oficial)
+2. mcp_nuxt-ui_list_components (ver componentes de UI)
+3. mcp_supabase_list_tables (verificar estrutura de dados)
+
+# Para páginas gerais:
 1. mcp_nuxt-ui_list_components (ver componentes de formulário)
 2. mcp_supabase_list_tables (verificar estrutura de dados)
 3. mcp_nuxt_get_documentation_page (entender roteamento)
@@ -243,6 +269,151 @@ ON posts FOR SELECT
 USING (auth.uid() = user_id);
 ```
 
+## 💳 Sistema de Pagamentos - Stripe
+
+### Módulo Nuxt Stripe
+Este projeto utiliza o módulo **`@unlok-co/nuxt-stripe`** para integração com a plataforma de pagamentos Stripe.
+
+**Documentação oficial:** [https://github.com/flozero/nuxt-stripe](https://github.com/flozero/nuxt-stripe?utm_source=nuxt.com&utm_medium=aside-module&utm_campaign=nuxt.com)
+
+### Configuração
+```typescript
+// nuxt.config.ts
+export default defineNuxtConfig({
+  modules: ['@unlok-co/nuxt-stripe'],
+  stripe: {
+    // Server-side
+    server: {
+      key: process.env.STRIPE_SECRET_KEY,
+      options: {
+        // API options override
+      },
+    },
+    // Client-side
+    client: {
+      key: process.env.STRIPE_PUBLISHABLE_KEY,
+      options: {},
+    },
+  },
+})
+```
+
+### Uso Básico
+
+#### Server-side (API Routes)
+```typescript
+import { defineEventHandler } from 'h3'
+import { useServerStripe } from '#stripe/server'
+
+export default defineEventHandler(async (event) => {
+  const stripe = await useServerStripe(event)
+
+  // Criar Payment Intent
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: 1000, // R$ 10,00 em centavos
+    currency: 'brl',
+    automatic_payment_methods: { enabled: true },
+  })
+
+  return {
+    clientSecret: paymentIntent.client_secret,
+  }
+})
+```
+
+#### Client-side (Componentes Vue)
+```vue
+<script setup lang="ts">
+const { stripe } = useClientStripe()
+
+// Usar o Stripe para processar pagamentos
+const handlePayment = async () => {
+  if (stripe.value) {
+    const { error } = await stripe.value.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: `${window.location.origin}/success`,
+      },
+    })
+
+    if (error) {
+      console.error('Erro no pagamento:', error)
+    }
+  }
+}
+</script>
+```
+
+### Produtos Stripe Principais
+
+#### 1. **Payments** - Pagamentos únicos
+- **Payment Intents API**: API moderna para processar pagamentos
+- **Charges API**: API legada (ainda suportada)
+- **Stripe Elements**: Componentes de UI para formulários de pagamento
+- **Payment Links**: Links de pagamento hospedados pelo Stripe
+
+#### 2. **Billing** - Assinaturas e recorrência
+- **Subscriptions**: Cobrança recorrente automática
+- **Prices**: Definição de preços e planos
+- **Invoices**: Faturas automáticas
+- **Customer Portal**: Portal self-service para clientes
+
+#### 3. **Connect** - Plataformas de marketplace
+- **Express Accounts**: Contas expressas para vendedores
+- **Standard Accounts**: Contas padrão com painel completo
+- **Application Fees**: Taxas de aplicação automática
+
+### Variáveis de Ambiente
+```bash
+# .env
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_PUBLISHABLE_KEY=pk_test_...
+```
+
+### Boas Práticas Stripe
+
+#### Segurança
+- ✅ Nunca exponha chaves secretas no client-side
+- ✅ Use sempre HTTPS em produção
+- ✅ Implemente verificação de webhook signatures
+- ✅ Armazene apenas IDs do Stripe, nunca dados completos de cartão
+
+#### UX/UI
+- ✅ Use Stripe Elements para formulários de pagamento
+- ✅ Implemente loading states durante processamento
+- ✅ Mostre mensagens de erro claras para o usuário
+- ✅ Suporte a múltiplos métodos de pagamento
+
+#### Backend
+- ✅ Use webhooks para eventos assíncronos
+- ✅ Implemente idempotency keys para evitar duplicatas
+- ✅ Valide todos os dados antes de enviar para Stripe
+- ✅ Monitore logs e implemente alertas
+
+### Testes com Stripe
+```typescript
+// Test mode keys (sempre usar em desenvolvimento)
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_PUBLISHABLE_KEY=pk_test_...
+
+// Cartões de teste
+// Sucesso: 4242 4242 4242 4242
+// Falha: 4000 0000 0000 0002
+// Exigir autenticação: 4000 0025 0000 3155
+```
+
+### Monitoramento e Debugging
+- **Stripe Dashboard**: Interface web para gerenciar transações
+- **Stripe CLI**: Ferramenta de linha de comando para desenvolvimento
+- **Logs**: Todos os eventos são logados automaticamente
+- **Webhooks**: Receba notificações em tempo real
+
+### Compliance e Regulamentação
+- ✅ **PCI DSS**: Stripe lida com conformidade de segurança
+- ✅ **SCA (Strong Customer Authentication)**: Suporte automático para Europa
+- ✅ **SOX Compliance**: Adequado para empresas públicas
+- ✅ **GDPR**: Conformidade com proteção de dados
+
 ## 📁 Estrutura de Arquivos
 
 ### Páginas (`app/pages/`)
@@ -302,10 +473,13 @@ SUPABASE_ANON_KEY=your_anon_key
 - [Nuxt 4 Docs](https://nuxt.com/docs)
 - [Nuxt UI Docs](https://ui.nuxt.com)
 - [Supabase Docs](https://supabase.com/docs)
+- [Stripe Docs](https://docs.stripe.com)
+- [Nuxt Stripe Module](https://github.com/flozero/nuxt-stripe)
 
 ### Comunidades
 - [Nuxt Discord](https://discord.nuxtjs.org)
 - [Supabase Discord](https://supabase.com/discord)
+- [Stripe Discord](https://stripe.com/discord)
 
 ## 🧪 Testes Unitários
 
@@ -558,6 +732,7 @@ describe('Component/Page/Composable Name', () => {
 
 #### Mocks e Stubs
 - **Supabase**: Mock sempre as chamadas de API
+- **Stripe**: Mock todas as chamadas de pagamento e webhooks
 - **Router**: Mock navegação quando necessário
 - **Componentes externos**: Usar stubs para isolamento
 
@@ -565,21 +740,70 @@ describe('Component/Page/Composable Name', () => {
 - **Unitários**: Testam unidades isoladas (componentes, composables)
 - **Integração**: Testam fluxo completo (futuro - e2e)
 
+#### Testes de Pagamento (Stripe)
+```typescript
+// Mocks essenciais para testes Stripe
+vi.mock('@unlok-co/nuxt-stripe', () => ({
+  useServerStripe: () => mockStripeServer,
+  useClientStripe: () => ({ stripe: ref(mockStripeClient) })
+}))
+
+// Mock do Stripe Server
+const mockStripeServer = {
+  paymentIntents: {
+    create: vi.fn(),
+    retrieve: vi.fn(),
+    confirm: vi.fn()
+  },
+  customers: {
+    create: vi.fn(),
+    retrieve: vi.fn()
+  },
+  subscriptions: {
+    create: vi.fn(),
+    cancel: vi.fn()
+  }
+}
+
+// Mock do Stripe Client
+const mockStripeClient = {
+  elements: vi.fn(() => ({
+    create: vi.fn(() => ({
+      mount: vi.fn(),
+      unmount: vi.fn()
+    }))
+  })),
+  confirmPayment: vi.fn(),
+  confirmCardPayment: vi.fn()
+}
+```
+
+**Cenários de teste essenciais:**
+- ✅ Criação bem-sucedida de Payment Intent
+- ✅ Tratamento de erros de pagamento
+- ✅ Validação de webhooks
+- ✅ Fluxos de assinatura
+- ✅ Estados de loading durante processamento
+- ✅ Mensagens de erro para usuário
+
 ## ⚠️ Boas Práticas
 
-1. **Sempre consulte MCP servers** antes de implementar
+1. **Sempre consulte MCP servers** antes de implementar (Supabase, Stripe, Nuxt)
 2. **Escreva testes** para toda nova funcionalidade
 3. **Execute testes** ao final de cada desenvolvimento
 4. **Use TypeScript** para tipagem forte
 5. **Implemente autenticação** em funcionalidades que necessitam
 6. **Verifique RLS policies** para segurança de dados
-7. **Teste responsividade** em diferentes dispositivos
-8. **Use ESLint** para manter código consistente
-9. **Documente composables** e componentes complexos
-10. **Implemente loading states** para melhor UX
-11. **Use error handling** adequado
-12. **Otimize queries** Supabase para performance
-13. **Mantenha cobertura > 80%** em todos os testes
+7. **Nunca exponha chaves Stripe** no client-side
+8. **Use sempre HTTPS** em produção para pagamentos
+9. **Implemente webhooks** para eventos Stripe assíncronos
+10. **Teste responsividade** em diferentes dispositivos
+11. **Use ESLint** para manter código consistente
+12. **Documente composables** e componentes complexos
+13. **Implemente loading states** para melhor UX
+14. **Use error handling** adequado em pagamentos
+15. **Otimize queries** Supabase para performance
+16. **Mantenha cobertura > 80%** em todos os testes
 
 ---
 
