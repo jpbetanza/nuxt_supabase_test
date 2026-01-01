@@ -228,6 +228,47 @@ const signIn = async () => {
 </template>
 ```
 
+### Notificações (Toast)
+Use o composable `useToast()` para mostrar notificações ao usuário. Sempre use as cores apropriadas:
+
+```typescript
+<script setup lang="ts">
+const toast = useToast()
+
+// ✅ Sucesso
+toast.add({
+  title: 'Sucesso!',
+  description: 'Operação realizada com sucesso.',
+  color: 'success'
+})
+
+// ✅ Erro
+toast.add({
+  title: 'Erro',
+  description: 'Ocorreu um erro inesperado.',
+  color: 'error'
+})
+
+// ✅ Informações
+toast.add({
+  title: 'Informação',
+  description: 'Esta é uma informação importante.',
+  color: 'info'
+})
+
+// ✅ Aviso
+toast.add({
+  title: 'Atenção',
+  description: 'Verifique os dados antes de continuar.',
+  color: 'warning'
+})
+</script>
+```
+
+**Cores válidas:** `'primary' | 'secondary' | 'success' | 'error' | 'info' | 'warning' | 'neutral'`
+
+**❌ Não use:** `'green'`, `'red'`, `'blue'`, etc. - use sempre os valores do enum.
+
 ## 🗄️ Padrões de Banco de Dados
 
 ### Queries Supabase

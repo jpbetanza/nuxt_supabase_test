@@ -24,7 +24,7 @@ const confirmEmail = async () => {
       toast.add({
         title: 'Sucesso!',
         description: 'Seu email foi confirmado com sucesso.',
-        color: 'green'
+        color: 'success'
       })
 
       // Redirecionar para a página inicial após alguns segundos
@@ -40,7 +40,7 @@ const confirmEmail = async () => {
     toast.add({
       title: 'Erro',
       description: error.value,
-      color: 'red'
+      color: 'error'
     })
   } finally {
     loading.value = false
