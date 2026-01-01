@@ -12,8 +12,8 @@
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
-    "test:ci": "vitest run --coverage",
-    "test:unit": "vitest test/unit",
+    "test:ci": "vitest run --coverage --reporter=verbose",
+    "test:unit": "vitest tests/unit",
     "test:nuxt": "vitest test/nuxt"
   },
   "dependencies": {
