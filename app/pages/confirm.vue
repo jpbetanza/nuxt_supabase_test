@@ -371,11 +371,16 @@ onUnmounted(() => {
     <UModal v-model="showResendModal">
       <UCard>
         <template #header>
-          <h3 class="text-lg font-semibold">Reenviar link de confirmação</h3>
+          <h3 class="text-lg font-semibold">
+            Reenviar link de confirmação
+          </h3>
         </template>
 
         <UForm @submit="() => resendConfirmationLink(resendEmail)">
-          <UFormGroup label="Email" required>
+          <UFormGroup
+            label="Email"
+            required
+          >
             <UInput
               v-model="resendEmail"
               type="email"
