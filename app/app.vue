@@ -36,7 +36,7 @@ useSeoMeta({
           <span class="font-semibold text-lg">Plataforma SaaS</span>
         </NuxtLink>
       </template>
-
+ 
       <template #right>
         <UColorModeButton />
 
