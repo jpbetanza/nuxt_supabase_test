@@ -15,10 +15,11 @@ const handleLogout = async () => {
     })
 
     await navigateTo('/login')
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error && typeof error === 'object' && 'message' in error ? (error as { message: string }).message : undefined
     toast.add({
       title: 'Erro',
-      description: error.message || 'Erro ao fazer logout',
+      description: message || 'Erro ao fazer logout',
       color: 'error'
     })
   }
@@ -41,21 +42,27 @@ const handleLogout = async () => {
       </template>
 
       <template #right>
-        <div v-if="user" class="flex items-center gap-4">
+        <div
+          v-if="user"
+          class="flex items-center gap-4"
+        >
           <span class="text-sm text-gray-600 dark:text-gray-400">
             Olá, {{ user.email }}
           </span>
           <UButton
-            @click="handleLogout"
             variant="outline"
             size="sm"
             icon="i-lucide-log-out"
+            @click="handleLogout"
           >
             Sair
           </UButton>
         </div>
 
-        <div v-else class="flex items-center gap-2">
+        <div
+          v-else
+          class="flex items-center gap-2"
+        >
           <UButton
             to="/login"
             variant="outline"

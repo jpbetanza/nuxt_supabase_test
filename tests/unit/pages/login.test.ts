@@ -1,5 +1,18 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { ref } from 'vue'
+import type { FormSubmitEvent } from '@nuxt/ui'
+
+// Tipos para os dados dos formulários
+interface LoginData {
+  email: string
+  password: string
+}
+
+interface RegisterData {
+  email: string
+  password: string
+  confirmPassword: string
+}
 
 // Mock do Supabase
 const mockSupabase = {
@@ -33,12 +46,12 @@ vi.mock('nuxt/app', () => ({
 // Simulação das funções da página de login
 const createLoginPage = () => {
   // Estado reativo simulado
-  let isLogin = ref(true)
-  let loading = ref(false)
-  let authError = ref('')
+  const isLogin = ref(true)
+  const loading = ref(false)
+  const authError = ref('')
 
   // Função de validação para login
-  const validateLogin = (data: any) => {
+  const validateLogin = (data: LoginData) => {
     const errors: string[] = []
 
     if (!data.email || !data.email.includes('@')) {
@@ -53,7 +66,7 @@ const createLoginPage = () => {
   }
 
   // Função de validação para cadastro
-  const validateRegister = (data: any) => {
+  const validateRegister = (data: RegisterData) => {
     const errors: string[] = []
 
     if (!data.email || !data.email.includes('@')) {
@@ -72,7 +85,7 @@ const createLoginPage = () => {
   }
 
   // Função de login
-  const handleLogin = async (payload: any) => {
+  const handleLogin = async (payload: FormSubmitEvent<LoginData>) => {
     loading.value = true
     authError.value = ''
 
@@ -100,9 +113,9 @@ const createLoginPage = () => {
 
       // Redirecionar para a página inicial
       mockNavigateTo('/')
-
-    } catch (error: any) {
-      authError.value = error.message || 'Erro ao fazer login'
+    } catch (error: unknown) {
+      const message = error && typeof error === 'object' && 'message' in error ? (error as { message: string }).message : undefined
+      authError.value = message || 'Erro ao fazer login'
       mockToast.add({
         title: 'Erro',
         description: authError.value,
@@ -114,7 +127,7 @@ const createLoginPage = () => {
   }
 
   // Função de cadastro
-  const handleRegister = async (payload: any) => {
+  const handleRegister = async (payload: FormSubmitEvent<RegisterData>) => {
     loading.value = true
     authError.value = ''
 
@@ -145,9 +158,9 @@ const createLoginPage = () => {
 
       // Alternar para modo de login após cadastro
       isLogin.value = true
-
-    } catch (error: any) {
-      authError.value = error.message || 'Erro ao criar conta'
+    } catch (error: unknown) {
+      const message = error && typeof error === 'object' && 'message' in error ? (error as { message: string }).message : undefined
+      authError.value = message || 'Erro ao criar conta'
       mockToast.add({
         title: 'Erro',
         description: authError.value,

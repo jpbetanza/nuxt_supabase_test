@@ -24,7 +24,7 @@ const confirmEmail = async () => {
       toast.add({
         title: 'Sucesso!',
         description: 'Seu email foi confirmado com sucesso.',
-        color: 'green'
+        color: 'success'
       })
 
       // Redirecionar para a página inicial após alguns segundos
@@ -34,12 +34,13 @@ const confirmEmail = async () => {
     } else {
       throw new Error('Não foi possível confirmar o email')
     }
-  } catch (err: any) {
-    error.value = err.message || 'Erro ao confirmar email'
+  } catch (err: unknown) {
+    const message = err && typeof err === 'object' && 'message' in err ? (err as { message: string }).message : undefined
+    error.value = message || 'Erro ao confirmar email'
     toast.add({
       title: 'Erro',
       description: error.value,
-      color: 'red'
+      color: 'error'
     })
   } finally {
     loading.value = false
@@ -57,17 +58,31 @@ onMounted(() => {
     <UPageCard class="w-full max-w-md">
       <div class="text-center">
         <!-- Estado de loading -->
-        <div v-if="loading" class="flex flex-col items-center gap-4">
-          <UIcon name="i-lucide-loader" class="size-12 animate-spin text-primary" />
-          <h2 class="text-xl font-semibold">Confirmando seu email...</h2>
+        <div
+          v-if="loading"
+          class="flex flex-col items-center gap-4"
+        >
+          <UIcon
+            name="i-lucide-loader"
+            class="size-12 animate-spin text-primary"
+          />
+          <h2 class="text-xl font-semibold">
+            Confirmando seu email...
+          </h2>
           <p class="text-gray-600 dark:text-gray-400">
             Aguarde enquanto verificamos sua confirmação.
           </p>
         </div>
 
         <!-- Estado de sucesso -->
-        <div v-else-if="success" class="flex flex-col items-center gap-4">
-          <UIcon name="i-lucide-check-circle" class="size-12 text-green-500" />
+        <div
+          v-else-if="success"
+          class="flex flex-col items-center gap-4"
+        >
+          <UIcon
+            name="i-lucide-check-circle"
+            class="size-12 text-green-500"
+          />
           <h2 class="text-xl font-semibold text-green-600 dark:text-green-400">
             Email confirmado!
           </h2>
@@ -85,8 +100,14 @@ onMounted(() => {
         </div>
 
         <!-- Estado de erro -->
-        <div v-else-if="error" class="flex flex-col items-center gap-4">
-          <UIcon name="i-lucide-x-circle" class="size-12 text-red-500" />
+        <div
+          v-else-if="error"
+          class="flex flex-col items-center gap-4"
+        >
+          <UIcon
+            name="i-lucide-x-circle"
+            class="size-12 text-red-500"
+          />
           <h2 class="text-xl font-semibold text-red-600 dark:text-red-400">
             Erro na confirmação
           </h2>
@@ -95,15 +116,15 @@ onMounted(() => {
           </p>
           <div class="flex gap-2">
             <UButton
-              @click="confirmEmail"
               :loading="loading"
               variant="outline"
+              @click="confirmEmail"
             >
               Tentar novamente
             </UButton>
             <UButton
-              @click="$router.push('/login')"
               color="primary"
+              @click="$router.push('/login')"
             >
               Voltar ao login
             </UButton>

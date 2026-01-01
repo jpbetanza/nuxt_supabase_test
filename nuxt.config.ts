@@ -1,6 +1,14 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  modules: ['@nuxt/eslint', '@nuxt/ui', '@nuxtjs/supabase', '@nuxt/test-utils/module'],
+  modules: [
+    '@nuxt/eslint',
+    '@nuxt/ui',
+    '@nuxtjs/supabase',
+    '@nuxt/test-utils/module',
+    '@unlok-co/nuxt-stripe'
+  ],
+
+  ssr: false,
 
   devtools: {
     enabled: true
@@ -28,14 +36,12 @@ export default defineNuxtConfig({
       callback: '/confirm',
       include: undefined,
       exclude: [],
-      saveRedirectToCookie: false,
+      saveRedirectToCookie: false
     },
     cookieOptions: {
       maxAge: 60 * 60 * 8,
       sameSite: 'lax',
       secure: true
     }
-  },
-
-  ssr: false
+  }
 })
