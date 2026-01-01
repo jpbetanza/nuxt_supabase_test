@@ -753,6 +753,133 @@ STRIPE_PUBLISHABLE_KEY=pk_test_...
 - ✅ **SOX Compliance**: Adequado para empresas públicas
 - ✅ **GDPR**: Conformidade com proteção de dados
 
+## 🔍 ESLint e Regras de Formatação
+
+### Configuração do ESLint
+Este projeto utiliza **@nuxt/eslint** com regras específicas para Vue.js e TypeScript. O ESLint é configurado automaticamente pelo Nuxt e inclui regras para:
+
+- **Sintaxe TypeScript**: Verificação de tipos e melhores práticas
+- **Regras Vue**: Formatação adequada de templates Vue
+- **Estilo de código**: Consistência na formatação
+
+### Regras Essenciais Vue
+
+#### 1. `vue/multiline-html-element-content-newline`
+**Regra**: Controla quebras de linha em elementos HTML multilinha.
+
+**Correto**:
+```vue
+<!-- ✅ Uma quebra de linha após tag de abertura -->
+<div class="container">
+  <p>Conteúdo</p>
+</div>
+
+<!-- ✅ Uma quebra de linha antes de tag de fechamento -->
+<div class="container">
+  <p>Conteúdo</p>
+</div>
+```
+
+**Incorreto**:
+```vue
+<!-- ❌ Múltiplas quebras de linha -->
+<div class="container">
+
+  <p>Conteúdo</p>
+</div>
+```
+
+#### 2. `vue/max-attributes-per-line`
+**Regra**: Controla o posicionamento de atributos em elementos HTML.
+
+**Correto**:
+```vue
+<!-- ✅ Atributos em linhas separadas quando há múltiplos -->
+<UIcon
+  name="i-lucide-zap"
+  class="w-6 h-6 text-primary mr-3"
+/>
+
+<!-- ✅ Atributo único na mesma linha -->
+<div class="container">
+```
+
+**Incorreto**:
+```vue
+<!-- ❌ Atributo class na mesma linha com outros -->
+<UIcon name="i-lucide-zap" class="w-6 h-6 text-primary mr-3" />
+```
+
+### Comandos ESLint
+
+```bash
+# Verificar todos os arquivos
+pnpm lint
+
+# Corrigir automaticamente erros corrigíveis
+pnpm lint -- --fix
+
+# Verificar arquivo específico
+node_modules/.bin/eslint app/pages/login.vue
+
+# Corrigir arquivo específico
+node_modules/.bin/eslint --fix app/pages/login.vue
+```
+
+### Boas Práticas de Formatação
+
+#### Estrutura de Componentes Vue
+```vue
+<script setup lang="ts">
+// ✅ Imports organizados
+import type { FormSubmitEvent } from '@nuxt/ui'
+
+// ✅ Tipos definidos claramente
+interface UserData {
+  email: string
+  password: string
+}
+
+// ✅ Lógica organizada
+const handleSubmit = async (payload: FormSubmitEvent<UserData>) => {
+  // Implementação
+}
+</script>
+
+<template>
+  <!-- ✅ Estrutura HTML limpa -->
+  <UPage>
+    <UPageHero title="Título" />
+
+    <UPageSection>
+      <!-- ✅ Componentes UIcon com atributos formatados -->
+      <UIcon
+        name="i-lucide-zap"
+        class="w-6 h-6 text-primary mr-3"
+      />
+    </UPageSection>
+  </UPage>
+</template>
+```
+
+#### Prevenção de Erros Comuns
+- ✅ Sempre execute `pnpm lint` antes de commitar
+- ✅ Use `--fix` para correções automáticas quando possível
+- ✅ Mantenha atributos de componentes em linhas separadas
+- ✅ Evite quebras de linha extras em elementos HTML
+- ✅ Execute testes após correções de linting
+
+### Integração com CI/CD
+O ESLint é executado automaticamente nos pipelines de CI/CD. Para passar nos testes:
+
+1. ✅ Corrija todos os erros marcados como "error"
+2. ✅ Considere corrigir warnings (marcados como "warning")
+3. ✅ Execute `pnpm lint` localmente antes de fazer push
+
+---
+
+**ESLint**: Ferramenta essencial para manter qualidade e consistência do código. Sempre execute linting antes de commits e pushes.
+
 ## 📁 Estrutura de Arquivos
 
 ### Páginas (`app/pages/`)

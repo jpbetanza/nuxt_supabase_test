@@ -225,7 +225,6 @@ const serviceQualities = [
     <!-- Container principal com grid responsivo -->
     <div class="container mx-auto px-4 py-8">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center min-h-[80vh]">
-
         <!-- Coluna da esquerda - Texto chamativo -->
         <div class="order-2 lg:order-1 text-center lg:text-left">
           <div class="max-w-lg mx-auto lg:mx-0">
@@ -242,17 +241,26 @@ const serviceQualities = [
 
             <div class="space-y-4">
               <div class="flex items-center justify-center lg:justify-start">
-                <UIcon name="i-lucide-zap" class="w-6 h-6 text-primary mr-3" />
+                <UIcon
+                  name="i-lucide-zap"
+                  class="w-6 h-6 text-primary mr-3"
+                />
                 <span class="text-gray-700 dark:text-gray-300">Resultados em minutos</span>
               </div>
 
               <div class="flex items-center justify-center lg:justify-start">
-                <UIcon name="i-lucide-trending-up" class="w-6 h-6 text-primary mr-3" />
+                <UIcon
+                  name="i-lucide-trending-up"
+                  class="w-6 h-6 text-primary mr-3"
+                />
                 <span class="text-gray-700 dark:text-gray-300">Cresça exponencialmente</span>
               </div>
 
               <div class="flex items-center justify-center lg:justify-start">
-                <UIcon name="i-lucide-shield" class="w-6 h-6 text-primary mr-3" />
+                <UIcon
+                  name="i-lucide-shield"
+                  class="w-6 h-6 text-primary mr-3"
+                />
                 <span class="text-gray-700 dark:text-gray-300">Segurança e confiabilidade</span>
               </div>
             </div>
@@ -361,7 +369,6 @@ const serviceQualities = [
             </UAuthForm>
           </UPageCard>
         </div>
-
       </div>
 
       <!-- Seção de qualidades do serviço -->
