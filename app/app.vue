@@ -29,9 +29,15 @@ useSeoMeta({
   <UApp>
     <UHeader>
       <template #left>
-        <NuxtLink to="/" class="flex items-center space-x-2">
+        <NuxtLink
+          to="/"
+          class="flex items-center space-x-2"
+        >
           <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <UIcon name="i-lucide-zap" class="w-5 h-5 text-white dark:text-white" />
+            <UIcon
+              name="i-lucide-zap"
+              class="w-5 h-5 text-white dark:text-white"
+            />
           </div>
           <span class="font-semibold text-lg">Plataforma SaaS</span>
         </NuxtLink>

@@ -202,6 +202,196 @@ const signIn = async () => {
 </template>
 ```
 
+## 🔐 Sistema de Autenticação e Confirmação de Email
+
+### Fluxo de Confirmação de Email
+
+O projeto utiliza o sistema de autenticação do **Supabase** com confirmação de email obrigatória. O fluxo funciona da seguinte forma:
+
+#### 1. **Cadastro de Usuário**
+```typescript
+// Na página de login (login.vue)
+const { error } = await supabase.auth.signUp({
+  email: payload.data.email,
+  password: payload.data.password,
+  options: {
+    emailRedirectTo: `${window.location.origin}/confirm` // URL de redirecionamento obrigatória
+  }
+})
+```
+
+#### 2. **Envio de Email de Confirmação**
+- Supabase envia automaticamente um email com link de confirmação
+- O link contém tokens temporários na URL (access_token, refresh_token, type)
+- **IMPORTANTE:** Em desenvolvimento, os emails podem não ser enviados automaticamente
+
+#### 3. **Página de Confirmação (`/confirm`)**
+```typescript
+// Verifica automaticamente se há erros na URL
+const checkForUrlErrors = () => {
+  const hash = window.location.hash
+  if (hash.includes('error=')) {
+    // Trata links expirados ou inválidos
+    // Ex: #error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired
+  }
+}
+
+// Verifica periodicamente se o usuário foi confirmado
+const startConfirmationCheck = () => {
+  // Polling por até 30 segundos para detectar confirmação automática
+  // Verifica getSession() e campos email_confirmed_at/confirmed_at
+}
+```
+
+### Configuração Obrigatória no Supabase Dashboard
+
+#### **Site URL**
+- **Localização:** Authentication → Settings → Site URL
+- **Valor desenvolvimento:** `http://localhost:3000`
+- **Valor produção:** `https://seudominio.com`
+
+#### **Redirect URLs**
+- **Localização:** Authentication → Settings → Redirect URLs
+- **URLs obrigatórias:**
+  - `http://localhost:3000/confirm` (desenvolvimento)
+  - `https://seudominio.com/confirm` (produção)
+
+#### **Email Templates**
+- **Localização:** Authentication → Email Templates
+- **Importante:** Verificar se os templates estão ativos
+- **SMTP:** Configurar se usar SMTP customizado
+
+### Problemas Comuns e Soluções
+
+#### **1. Link Expirado (`otp_expired`)**
+**Sintomas:**
+- URL contém: `#error=access_denied&error_code=otp_expired`
+- Mensagem: "Email link is invalid or has expired"
+
+**Soluções:**
+- Solicitar novo link via `supabase.auth.resend()`
+- Verificar configuração de expiração no Supabase Dashboard
+- Orientar usuário a verificar caixa de spam
+
+#### **2. Sessão Não Encontrada**
+**Sintomas:**
+- Log: "No session found"
+- Confirmação falha mesmo com link válido
+
+**Soluções:**
+- Verificar se o usuário existe no banco de dados
+- Verificar campos `email_confirmed_at` ou `confirmed_at`
+- Usar `getSession()` ao invés de apenas `getUser()`
+- Implementar polling para detectar mudanças assíncronas
+
+#### **3. Emails Não Enviados em Desenvolvimento**
+**Sintomas:**
+- Usuário criado no banco, mas nenhum email recebido
+
+**Soluções:**
+- **Método 1:** Usar Supabase Dashboard para enviar confirmação manual
+  1. Ir para Authentication → Users
+  2. Encontrar o usuário
+  3. Clicar "Send email confirmation"
+
+- **Método 2:** Configurar SMTP local (recomendado para desenvolvimento)
+- **Método 3:** Usar CLI do Supabase para testar emails
+
+#### **4. Erro "process.dev"**
+**Sintomas:**
+- Erro: `Cannot read properties of undefined (reading 'dev')`
+
+**Solução:**
+```typescript
+// ❌ Errado (Nuxt 2)
+const isDev = process.dev
+
+// ✅ Correto (Nuxt 3)
+const isDev = import.meta.env.DEV
+```
+
+### Debugging e Monitoramento
+
+#### **Logs Essenciais**
+```typescript
+// Em confirm.vue - logs de debug
+console.log('URL:', window.location.href)
+console.log('Hash:', window.location.hash)
+console.log('Search:', window.location.search)
+
+// Verificar sessão atual
+const { data: { session }, error } = await supabase.auth.getSession()
+console.log('Session:', session)
+console.log('User confirmed:', session?.user.email_confirmed_at || session?.user.confirmed_at)
+```
+
+#### **Console do Browser**
+- Abrir F12 → Console durante o processo de confirmação
+- Verificar logs de erro e informações de debug
+- Monitorar chamadas de rede para `/auth/v1/verify`
+
+#### **Supabase Dashboard**
+- **Users:** Verificar status de confirmação dos usuários
+- **Logs:** Verificar tentativas de autenticação
+- **Auth Settings:** Confirmar configurações de URL e redirects
+
+### Melhores Práticas
+
+#### **1. Tratamento de Erros Robusto**
+```typescript
+// Sempre verificar múltiplos campos de confirmação
+const isConfirmed = user.email_confirmed_at || user.confirmed_at
+
+// Tratar links expirados graciosamente
+if (url.includes('otp_expired')) {
+  // Mostrar opção de reenvio
+}
+```
+
+#### **2. UX Considerada**
+- Loading states durante verificação
+- Mensagens claras sobre o status
+- Opções de retry e reenvio
+- Debug info em modo desenvolvimento
+
+#### **3. Segurança**
+- Nunca logar tokens de autenticação
+- Verificar validade dos links antes de processar
+- Implementar timeouts para polling
+- Limpar timers adequadamente
+
+#### **4. Configuração de Ambiente**
+```bash
+# .env (desenvolvimento)
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_ANON_KEY=your-anon-key-here
+
+# Verificar se as variáveis estão carregadas
+console.log('Supabase URL:', useRuntimeConfig().public.supabase.url)
+```
+
+### Checklist de Implementação
+
+#### **Para Novas Funcionalidades de Auth:**
+- [ ] Configurar Site URL no Supabase Dashboard
+- [ ] Adicionar Redirect URLs necessárias
+- [ ] Testar fluxo completo de cadastro → confirmação
+- [ ] Verificar tratamento de links expirados
+- [ ] Implementar logs de debug apropriados
+- [ ] Testar em diferentes navegadores
+- [ ] Verificar funcionamento em produção
+
+#### **Debugging de Problemas:**
+- [ ] Verificar console do browser por erros
+- [ ] Checar Supabase Dashboard por status do usuário
+- [ ] Testar envio manual de confirmação
+- [ ] Verificar configurações de URL no dashboard
+- [ ] Confirmar variáveis de ambiente
+
+---
+
+**Autenticação Supabase:** Sistema crítico que requer configuração cuidadosa no dashboard e tratamento robusto de erros. Sempre teste o fluxo completo e tenha opções de fallback para links expirados.
+
 ## 🎨 Padrões de UI/UX
 
 ### Componentes Essenciais
@@ -1270,6 +1460,45 @@ const mockStripeClient = {
 14. **Use error handling** adequado em pagamentos
 15. **Otimize queries** Supabase para performance
 16. **Mantenha cobertura > 80%** em todos os testes
+17. **Nunca delete o arquivo .env local** - O arquivo `.env` contém variáveis de ambiente específicas do ambiente de desenvolvimento local. Este arquivo não deve ser removido ou modificado sem necessidade absoluta.
+18. **Sempre execute testes após mudanças em YAML ou Dockerfile** - Modificações em workflows GitHub Actions, Dockerfiles ou arquivos de configuração de infraestrutura podem quebrar builds e deploys. Execute testes locais e valide a sintaxe antes de commitar.
+
+### Testes Após Modificações em Arquivos de Infraestrutura
+
+#### Workflows GitHub Actions (.github/workflows/*.yml)
+```bash
+# Verificar sintaxe do workflow (opcional - GitHub valida automaticamente)
+# Fazer push para branch de teste e verificar se o workflow executa
+git push origin feature/nova-feature:test-branch
+
+# Monitorar execução no GitHub Actions
+# Verificar se jobs executam na ordem correta
+# Validar se artifacts são criados e transferidos entre jobs
+```
+
+#### Dockerfile
+```bash
+# Testar build local
+docker build -t test-image .
+
+# Verificar se container inicia corretamente
+docker run --rm test-image
+
+# Validar se aplicação funciona dentro do container
+docker run -p 3000:3000 test-image
+
+# Limpar imagens de teste
+docker rmi test-image
+```
+
+#### Arquivos de Configuração
+```bash
+# Validar sintaxe YAML
+yamllint .github/workflows/*.yml
+
+# Verificar se variáveis de ambiente estão definidas
+# Testar configurações em ambiente local antes do deploy
+```
 
 ---
 

@@ -123,14 +123,17 @@ const handleLogin = async (payload: FormSubmitEvent<LoginData>) => {
 
     if (error) throw error
 
+    // Aguardar um pequeno delay para garantir que a sessão seja estabelecida
+    await new Promise(resolve => setTimeout(resolve, 100))
+
     toast.add({
       title: 'Sucesso!',
       description: 'Login realizado com sucesso.',
       color: 'success'
     })
 
-    // Redirecionar para a página inicial
-    await navigateTo('/')
+    // Redirecionar para a página inicial imediatamente
+    await navigateTo('/', { replace: true })
   } catch (error: unknown) {
     const message = error && typeof error === 'object' && 'message' in error ? (error as { message: string }).message : undefined
     authError.value = message || 'Erro ao fazer login'
@@ -228,9 +231,9 @@ const serviceQualities = [
         <!-- Coluna da esquerda - Texto chamativo -->
         <div class="order-2 lg:order-1 text-center lg:text-left">
           <div class="max-w-lg mx-auto lg:mx-0">
-            <h1 class="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6">
+            <h1 class="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6 cursor-default">
               Transforme seu
-              <span class="text-primary hover:drop-shadow-lg hover:drop-shadow-primary/50 duration-200 cursor-default">dia a dia</span>
+              <span class="text-primary hover:drop-shadow-primary/50 hover:drop-shadow-lg duration-200 ">dia a dia</span>
             </h1>
 
             <p class="text-lg text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
