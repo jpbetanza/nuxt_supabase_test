@@ -307,18 +307,279 @@ SUPABASE_ANON_KEY=your_anon_key
 - [Nuxt Discord](https://discord.nuxtjs.org)
 - [Supabase Discord](https://supabase.com/discord)
 
+## 🧪 Testes Unitários
+
+**IMPORTANTE:** Toda nova funcionalidade deve incluir testes unitários utilizando `@nuxt/test-utils`. Os testes devem ser executados ao final de cada desenvolvimento para garantir a integridade do sistema.
+
+### Configuração de Testes
+
+**Stack de Testes:**
+- **@nuxt/test-utils** - Utilitários oficiais do Nuxt para testes
+- **Vitest** - Framework de testes rápido e moderno
+- **@vue/test-utils** - Utilitários para testar componentes Vue
+- **jsdom** - Ambiente DOM para testes
+
+**Estrutura dos Testes:**
+```
+tests/
+├── unit/                    # Testes unitários
+│   ├── components/         # Testes de componentes
+│   ├── pages/             # Testes de páginas
+│   ├── composables/       # Testes de composables
+│   └── utils/             # Testes de utilitários
+└── e2e/                   # Testes end-to-end (futuro)
+
+# Arquivos de configuração
+vitest.config.ts           # Configuração do Vitest
+test.setup.ts             # Configuração global dos testes
+```
+
+### Escrevendo Testes
+
+#### 1. Testes de Componentes
+```typescript
+// tests/unit/components/UserCard.test.ts
+import { describe, it, expect } from 'vitest'
+import { mount } from '@vue/test-utils'
+import UserCard from '~/components/UserCard.vue'
+
+describe('UserCard', () => {
+  it('renders user name correctly', () => {
+    const user = { name: 'João Silva', email: 'joao@example.com' }
+    const wrapper = mount(UserCard, {
+      props: { user }
+    })
+
+    expect(wrapper.text()).toContain('João Silva')
+    expect(wrapper.text()).toContain('joao@example.com')
+  })
+
+  it('emits edit event when edit button is clicked', async () => {
+    const user = { name: 'João Silva', email: 'joao@example.com' }
+    const wrapper = mount(UserCard, {
+      props: { user }
+    })
+
+    await wrapper.find('button[data-testid="edit-btn"]').trigger('click')
+
+    expect(wrapper.emitted('edit')).toBeTruthy()
+    expect(wrapper.emitted('edit')![0]).toEqual([user])
+  })
+})
+```
+
+#### 2. Testes de Páginas
+```typescript
+// tests/unit/pages/index.test.ts
+import { describe, it, expect, vi } from 'vitest'
+import { mountSuspended } from '@nuxt/test-utils/runtime'
+import IndexPage from '~/pages/index.vue'
+
+// Mock do Supabase
+vi.mock('@nuxtjs/supabase', () => ({
+  useSupabaseClient: () => ({
+    from: vi.fn(() => ({
+      select: vi.fn(() => ({
+        data: [{ id: 1, title: 'Test Post' }],
+        error: null
+      }))
+    }))
+  }),
+  useSupabaseUser: () => ref({ id: 'user-123' })
+}))
+
+describe('Index Page', () => {
+  it('loads and displays posts', async () => {
+    const wrapper = await mountSuspended(IndexPage)
+
+    expect(wrapper.text()).toContain('Test Post')
+  })
+
+  it('shows loading state initially', async () => {
+    const wrapper = await mountSuspended(IndexPage)
+
+    // Verifica se o estado de loading é exibido
+    expect(wrapper.find('[data-testid="loading"]').exists()).toBe(true)
+  })
+})
+```
+
+#### 3. Testes de Composables
+```typescript
+// tests/unit/composables/usePosts.test.ts
+import { describe, it, expect, vi } from 'vitest'
+import { usePosts } from '~/composables/usePosts'
+
+// Mock do Supabase
+const mockSupabase = {
+  from: vi.fn(() => ({
+    select: vi.fn(() => ({
+      data: [{ id: 1, title: 'Test Post' }],
+      error: null
+    }))
+  }))
+}
+
+vi.mock('@nuxtjs/supabase', () => ({
+  useSupabaseClient: () => mockSupabase
+}))
+
+describe('usePosts', () => {
+  it('fetches posts successfully', async () => {
+    const { posts, loading, fetchPosts } = usePosts()
+
+    await fetchPosts()
+
+    expect(loading.value).toBe(false)
+    expect(posts.value).toEqual([{ id: 1, title: 'Test Post' }])
+    expect(mockSupabase.from).toHaveBeenCalledWith('posts')
+  })
+
+  it('handles errors gracefully', async () => {
+    mockSupabase.from.mockReturnValue({
+      select: vi.fn(() => ({
+        data: null,
+        error: { message: 'Database error' }
+      }))
+    })
+
+    const { error, fetchPosts } = usePosts()
+
+    await fetchPosts()
+
+    expect(error.value).toBe('Database error')
+  })
+})
+```
+
+### Configuração do Vitest
+
+**vitest.config.ts:**
+```typescript
+/// <reference types="vitest" />
+import { defineVitestConfig } from '@nuxt/test-utils/config'
+
+export default defineVitestConfig({
+  test: {
+    globals: true,
+    environment: 'nuxt',
+    setupFiles: ['./test.setup.ts']
+  }
+})
+```
+
+**test.setup.ts:**
+```typescript
+import { beforeAll } from 'vitest'
+
+// Configurações globais para testes
+beforeAll(() => {
+  // Configurações de ambiente de teste
+  process.env.NODE_ENV = 'test'
+})
+```
+
+### Comandos de Teste
+
+```bash
+# Executar todos os testes
+pnpm test
+
+# Executar testes em modo watch
+pnpm test:watch
+
+# Executar testes com cobertura
+pnpm test:coverage
+
+# Executar testes de um arquivo específico
+pnpm test UserCard.test.ts
+
+# Executar testes unitários apenas
+pnpm test:unit
+```
+
+### Workflow de Testes
+
+#### Antes de Implementar
+```bash
+# 1. Escrever testes primeiro (TDD)
+# Criar arquivo .test.ts correspondente
+
+# 2. Executar testes (devem falhar inicialmente)
+pnpm test
+
+# 3. Implementar funcionalidade
+# Escrever código até os testes passarem
+
+# 4. Refatorar e executar testes novamente
+pnpm test
+```
+
+#### Após Implementar
+```bash
+# 1. Executar suite completa de testes
+pnpm test
+
+# 2. Verificar cobertura de código
+pnpm test:coverage
+
+# 3. Corrigir qualquer falha identificada
+# - Testes quebrados
+# - Cobertura insuficiente (< 80%)
+# - Regressões no sistema
+```
+
+### Boas Práticas de Testes
+
+#### Cobertura de Código
+- **Mínimo 80%** de cobertura geral
+- **Componentes**: Cobrir props, eventos, estados
+- **Páginas**: Cobrir carregamento, interações, roteamento
+- **Composables**: Cobrir lógica de negócio, estados, erros
+
+#### Estrutura dos Testes
+```typescript
+describe('Component/Page/Composable Name', () => {
+  describe('when condition A', () => {
+    it('should behave correctly', () => {
+      // Arrange
+      // Act
+      // Assert
+    })
+  })
+
+  describe('when condition B', () => {
+    it('should handle edge case', () => {
+      // Teste de caso extremo
+    })
+  })
+})
+```
+
+#### Mocks e Stubs
+- **Supabase**: Mock sempre as chamadas de API
+- **Router**: Mock navegação quando necessário
+- **Componentes externos**: Usar stubs para isolamento
+
+#### Testes de Integração vs Unitários
+- **Unitários**: Testam unidades isoladas (componentes, composables)
+- **Integração**: Testam fluxo completo (futuro - e2e)
+
 ## ⚠️ Boas Práticas
 
 1. **Sempre consulte MCP servers** antes de implementar
-2. **Use TypeScript** para tipagem forte
-3. **Implemente autenticação** em funcionalidades que necessitam
-4. **Verifique RLS policies** para segurança de dados
-5. **Teste responsividade** em diferentes dispositivos
-6. **Use ESLint** para manter código consistente
-7. **Documente composables** e componentes complexos
-8. **Implemente loading states** para melhor UX
-9. **Use error handling** adequado
-10. **Otimize queries** Supabase para performance
+2. **Escreva testes** para toda nova funcionalidade
+3. **Execute testes** ao final de cada desenvolvimento
+4. **Use TypeScript** para tipagem forte
+5. **Implemente autenticação** em funcionalidades que necessitam
+6. **Verifique RLS policies** para segurança de dados
+7. **Teste responsividade** em diferentes dispositivos
+8. **Use ESLint** para manter código consistente
+9. **Documente composables** e componentes complexos
+10. **Implemente loading states** para melhor UX
+11. **Use error handling** adequado
+12. **Otimize queries** Supabase para performance
+13. **Mantenha cobertura > 80%** em todos os testes
 
 ---
 
