@@ -187,7 +187,6 @@ describe('Confirm Page', () => {
     })
   })
 
-
   describe('Confirmação de email bem-sucedida', () => {
     it('deve confirmar email com sucesso quando usuário está autenticado e email confirmado', async () => {
       const mockUser = {
@@ -257,10 +256,12 @@ describe('Confirm Page', () => {
       // Como não conseguiu confirmar na primeira tentativa, deve estar em modo de verificação periódica
       expect(page.loading.value).toBe(true)
 
-      // Avançar tempo suficiente para timeout (30 segundos = 30 tentativas de 1 segundo cada)
-      // Cada tentativa: 1 segundo
-      // Timeout após 30 tentativas = 30 segundos
-      vi.advanceTimersByTime(30000)
+      // Executar todas as tentativas de verificação até timeout
+      // Cada tentativa chama setTimeout com 1 segundo
+      for (let i = 0; i < 30; i++) {
+        vi.advanceTimersByTime(1000)
+        await vi.runOnlyPendingTimersAsync()
+      }
 
       expect(page.loading.value).toBe(false)
       expect(page.success.value).toBe(false)
@@ -269,7 +270,7 @@ describe('Confirm Page', () => {
       expect(mockToast.add).toHaveBeenCalledWith({
         title: 'Erro',
         description: 'Tempo limite excedido. Verifique se clicou no link correto do email ou tente fazer login novamente.',
-        color: 'red'
+        color: 'error'
       })
     })
 
@@ -293,8 +294,12 @@ describe('Confirm Page', () => {
       // Como não conseguiu confirmar na primeira tentativa, deve estar em modo de verificação periódica
       expect(page.loading.value).toBe(true)
 
-      // Avançar tempo suficiente para timeout (30 segundos)
-      vi.advanceTimersByTime(30000)
+      // Executar todas as tentativas de verificação até timeout
+      // Cada tentativa chama setTimeout com 1 segundo
+      for (let i = 0; i < 30; i++) {
+        vi.advanceTimersByTime(1000)
+        await vi.runOnlyPendingTimersAsync()
+      }
 
       expect(page.loading.value).toBe(false)
       expect(page.success.value).toBe(false)
@@ -315,8 +320,12 @@ describe('Confirm Page', () => {
       // Como não conseguiu confirmar na primeira tentativa, deve estar em modo de verificação periódica
       expect(page.loading.value).toBe(true)
 
-      // Avançar tempo suficiente para timeout (30 segundos)
-      vi.advanceTimersByTime(30000)
+      // Executar todas as tentativas de verificação até timeout
+      // Cada tentativa chama setTimeout com 1 segundo
+      for (let i = 0; i < 30; i++) {
+        vi.advanceTimersByTime(1000)
+        await vi.runOnlyPendingTimersAsync()
+      }
 
       expect(page.loading.value).toBe(false)
       expect(page.success.value).toBe(false)
@@ -360,10 +369,12 @@ describe('Confirm Page', () => {
 
       // Avançar 1 segundo para primeira verificação (ainda não confirmado)
       vi.advanceTimersByTime(1000)
+      await vi.runOnlyPendingTimersAsync()
       expect(page.loading.value).toBe(true) // Ainda carregando
 
       // Avançar mais 1 segundo para segunda verificação (agora confirmado)
       vi.advanceTimersByTime(1000)
+      await vi.runOnlyPendingTimersAsync()
 
       expect(page.loading.value).toBe(false) // Deve ter parado de carregar
       expect(page.success.value).toBe(true) // Deve ter tido sucesso
@@ -388,8 +399,12 @@ describe('Confirm Page', () => {
       // Como não conseguiu confirmar na primeira tentativa, deve estar em modo de verificação periódica
       expect(page.loading.value).toBe(true)
 
-      // Avançar tempo suficiente para timeout (30 segundos)
-      vi.advanceTimersByTime(30000)
+      // Executar todas as tentativas de verificação até timeout
+      // Cada tentativa chama setTimeout com 1 segundo
+      for (let i = 0; i < 30; i++) {
+        vi.advanceTimersByTime(1000)
+        await vi.runOnlyPendingTimersAsync()
+      }
 
       expect(page.loading.value).toBe(false)
     })
@@ -434,8 +449,12 @@ describe('Confirm Page', () => {
       // Como não conseguiu confirmar na primeira tentativa, deve estar em modo de verificação periódica
       expect(page.loading.value).toBe(true)
 
-      // Avançar tempo suficiente para timeout (30 segundos)
-      vi.advanceTimersByTime(30000)
+      // Executar todas as tentativas de verificação até timeout
+      // Cada tentativa chama setTimeout com 1 segundo
+      for (let i = 0; i < 30; i++) {
+        vi.advanceTimersByTime(1000)
+        await vi.runOnlyPendingTimersAsync()
+      }
 
       expect(page.loading.value).toBe(false)
       expect(page.success.value).toBe(false)

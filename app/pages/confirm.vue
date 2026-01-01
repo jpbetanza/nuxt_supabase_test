@@ -9,6 +9,8 @@ const success = ref(false)
 const error = ref<string | null>(null)
 const timeoutId = ref<NodeJS.Timeout | null>(null)
 const debugInfo = ref<string>('')
+const showResendModal = ref(false)
+const resendEmail = ref('')
 
 // Verificar se estamos em modo desenvolvimento
 const isDev = import.meta.env.DEV
@@ -47,7 +49,6 @@ const resendConfirmationLink = async (email: string) => {
     setTimeout(() => {
       router.push('/login')
     }, 3000)
-
   } catch (err: unknown) {
     const message = err && typeof err === 'object' && 'message' in err ? (err as { message: string }).message : undefined
     error.value = message || 'Erro ao reenviar link'
@@ -163,17 +164,32 @@ const startConfirmationCheck = () => {
   checkConfirmation()
 }
 
+// Método para tentar novamente
+const retryConfirmation = async () => {
+  loading.value = true
+  error.value = null
+  success.value = false
+
+  const isConfirmed = await checkEmailConfirmation()
+
+  if (!isConfirmed) {
+    startConfirmationCheck()
+  } else {
+    loading.value = false
+  }
+}
+
 // Verificar se há erros na URL (link expirado, etc.)
 const checkForUrlErrors = () => {
   if (typeof window !== 'undefined') {
     const hash = window.location.hash
     if (hash.includes('error=')) {
       const params = new URLSearchParams(hash.substring(1)) // Remove the '#'
-      const error = params.get('error')
+      const urlError = params.get('error')
       const errorCode = params.get('error_code')
       const errorDescription = params.get('error_description')
 
-      if (error === 'access_denied' && errorCode === 'otp_expired') {
+      if (urlError === 'access_denied' && errorCode === 'otp_expired') {
         loading.value = false
         error.value = 'O link de confirmação expirou. Solicite um novo link de confirmação.'
         toast.add({
@@ -318,18 +334,7 @@ onUnmounted(() => {
                 v-if="!error.includes('expirou') && !error.includes('expirado')"
                 :loading="loading"
                 variant="outline"
-                @click="() => {
-                  loading.value = true
-                  error.value = null
-                  success.value = false
-                  checkEmailConfirmation().then((isConfirmed) => {
-                    if (!isConfirmed) {
-                      startConfirmationCheck()
-                    } else {
-                      loading.value = false
-                    }
-                  })
-                }"
+                @click="retryConfirmation"
               >
                 Tentar novamente
               </UButton>
@@ -342,18 +347,17 @@ onUnmounted(() => {
             </div>
 
             <!-- Opção para reenviar link quando expirado -->
-            <div v-if="error.includes('expirou') || error.includes('expirado')" class="text-center">
-              <p class="text-sm text-gray-500 mb-2">Ou solicite um novo link:</p>
+            <div
+              v-if="error.includes('expirou') || error.includes('expirado')"
+              class="text-center"
+            >
+              <p class="text-sm text-gray-500 mb-2">
+                Ou solicite um novo link:
+              </p>
               <UButton
                 variant="link"
                 size="sm"
-                :loading="loading"
-                @click="() => {
-                  const email = prompt('Digite seu email para receber um novo link:')
-                  if (email) {
-                    resendConfirmationLink(email)
-                  }
-                }"
+                @click="showResendModal = true"
               >
                 Reenviar link de confirmação
               </UButton>
@@ -362,5 +366,40 @@ onUnmounted(() => {
         </div>
       </div>
     </UPageCard>
+
+    <!-- Modal para reenviar link -->
+    <UModal v-model="showResendModal">
+      <UCard>
+        <template #header>
+          <h3 class="text-lg font-semibold">Reenviar link de confirmação</h3>
+        </template>
+
+        <UForm @submit="() => resendConfirmationLink(resendEmail)">
+          <UFormGroup label="Email" required>
+            <UInput
+              v-model="resendEmail"
+              type="email"
+              placeholder="Digite seu email"
+            />
+          </UFormGroup>
+
+          <div class="flex gap-2 justify-end">
+            <UButton
+              variant="outline"
+              @click="showResendModal = false"
+            >
+              Cancelar
+            </UButton>
+            <UButton
+              type="submit"
+              :loading="loading"
+              :disabled="!resendEmail"
+            >
+              Enviar
+            </UButton>
+          </div>
+        </UForm>
+      </UCard>
+    </UModal>
   </div>
 </template>
