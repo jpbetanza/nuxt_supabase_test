@@ -34,27 +34,22 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'pnpm'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: latest
+          cache: 'npm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - name: Run type checking
-        run: pnpm typecheck
+        run: npm run typecheck
 
       - name: Run linting
-        run: pnpm lint
+        run: npm run lint
 
       - name: Run tests with coverage
-        run: pnpm test:coverage
+        run: npm run test:coverage
 
       - name: Build application
-        run: pnpm build
+        run: npm run build
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
