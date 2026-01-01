@@ -33,11 +33,20 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Create .env file for build
+        run: |
+          cat > .env << EOF
+          SUPABASE_URL=https://dummy.supabase.co
+          SUPABASE_KEY=dummy_key
+          STRIPE_SECRET_KEY=sk_test_dummy
+          STRIPE_PUBLISHABLE_KEY=pk_test_dummy
+          EOF
 
       - name: Run type checking
         run: npm run typecheck
