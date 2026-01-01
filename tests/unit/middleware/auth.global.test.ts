@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { ref } from 'vue'
+
+// Tipo para objeto de rota
+interface RouteObject {
+  path: string
+}
 
 // Mock do Supabase user
 const mockUseSupabaseUser = vi.fn()
@@ -18,7 +22,7 @@ vi.mock('nuxt/app', () => ({
 
 // Simulação da função do middleware
 const createAuthMiddleware = () => {
-  return async (to: any) => {
+  return async (to: RouteObject) => {
     const user = mockUseSupabaseUser()
 
     // Verificar se o objeto de rota tem path válido
