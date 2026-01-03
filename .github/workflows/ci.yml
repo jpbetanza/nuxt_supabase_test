@@ -32,11 +32,20 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Create .env file for tests
+        run: |
+          cat > .env << EOF
+          SUPABASE_URL=https://dummy.supabase.co
+          SUPABASE_KEY=dummy_key
+          STRIPE_SECRET_KEY=sk_test_dummy
+          STRIPE_PUBLISHABLE_KEY=pk_test_dummy
+          EOF
 
       - name: Run ESLint
         run: npm run lint
@@ -46,6 +55,11 @@ jobs:
 
       - name: Run tests
         run: npm run test:unit
+
+      # Upload coverage apenas em main e PRs
+      - name: Run tests with coverage
+        if: github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
+        run: npm run test:coverage
 
       # Upload coverage apenas em main e PRs
       - name: Upload coverage reports
@@ -67,11 +81,20 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Create .env file for build
+        run: |
+          cat > .env << EOF
+          SUPABASE_URL=https://dummy.supabase.co
+          SUPABASE_KEY=dummy_key
+          STRIPE_SECRET_KEY=sk_test_dummy
+          STRIPE_PUBLISHABLE_KEY=pk_test_dummy
+          EOF
 
       - name: Build application
         run: npm run build

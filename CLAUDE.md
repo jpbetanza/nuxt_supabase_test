@@ -2,6 +2,15 @@
 
 Este documento serve como referência para AIs desenvolvendo novas funcionalidades neste aplicativo Nuxt.js que utiliza Nuxt UI como sistema de componentes e Supabase como banco de dados e autenticador.
 
+## ⚠️ IMPORTANTE: Gerenciador de Pacotes
+
+**Este projeto utiliza exclusivamente `npm` como gerenciador de pacotes. NÃO use `pnpm`, `yarn` ou qualquer outro gerenciador.**
+
+- ✅ **Correto:** `npm install`, `npm run build`, `npm run test`
+- ❌ **Errado:** `pnpm install`, `pnpm build`, `pnpm test`
+
+**Motivo:** O Dockerfile e workflows CI/CD estão configurados especificamente para `npm` e usam `package-lock.json`. Usar outro gerenciador de pacotes causará conflitos e falhas no build.
+
 ## 📋 Visão Geral do Projeto
 
 **Stack Tecnológica:**
@@ -1004,16 +1013,16 @@ Este projeto utiliza **@nuxt/eslint** com regras específicas para Vue.js e Type
 
 ```bash
 # Verificar todos os arquivos
-pnpm lint
+npm run lint
 
 # Corrigir automaticamente erros corrigíveis
-pnpm lint -- --fix
+npm run lint -- --fix
 
 # Verificar arquivo específico
-node_modules/.bin/eslint app/pages/login.vue
+npx eslint app/pages/login.vue
 
 # Corrigir arquivo específico
-node_modules/.bin/eslint --fix app/pages/login.vue
+npx eslint --fix app/pages/login.vue
 ```
 
 ### Boas Práticas de Formatação
@@ -1053,7 +1062,7 @@ const handleSubmit = async (payload: FormSubmitEvent<UserData>) => {
 ```
 
 #### Prevenção de Erros Comuns
-- ✅ Sempre execute `pnpm lint` antes de commitar
+- ✅ Sempre execute `npm run lint` antes de commitar
 - ✅ Use `--fix` para correções automáticas quando possível
 - ✅ Mantenha atributos de componentes em linhas separadas
 - ✅ Evite quebras de linha extras em elementos HTML
@@ -1064,7 +1073,7 @@ O ESLint é executado automaticamente nos pipelines de CI/CD. Para passar nos te
 
 1. ✅ Corrija todos os erros marcados como "error"
 2. ✅ Considere corrigir warnings (marcados como "warning")
-3. ✅ Execute `pnpm lint` localmente antes de fazer push
+3. ✅ Execute `npm run lint` localmente antes de fazer push
 
 ---
 
@@ -1107,8 +1116,8 @@ mcp_supabase_get_advisors project_id security
 
 ### Build Commands
 ```bash
-pnpm build    # Build para produção
-pnpm preview  # Preview local do build
+npm run build    # Build para produção
+npm run preview  # Preview local do build
 ```
 
 ### Variáveis de Ambiente
@@ -1313,19 +1322,19 @@ beforeAll(() => {
 
 ```bash
 # Executar todos os testes
-pnpm test
+npm run test
 
 # Executar testes em modo watch
-pnpm test:watch
+npm run test:watch
 
 # Executar testes com cobertura
-pnpm test:coverage
+npm run test:coverage
 
 # Executar testes de um arquivo específico
-pnpm test UserCard.test.ts
+npm run test UserCard.test.ts
 
 # Executar testes unitários apenas
-pnpm test:unit
+npm run test:unit
 ```
 
 ### Workflow de Testes
@@ -1336,22 +1345,22 @@ pnpm test:unit
 # Criar arquivo .test.ts correspondente
 
 # 2. Executar testes (devem falhar inicialmente)
-pnpm test
+npm run test
 
 # 3. Implementar funcionalidade
 # Escrever código até os testes passarem
 
 # 4. Refatorar e executar testes novamente
-pnpm test
+npm run test
 ```
 
 #### Após Implementar
 ```bash
 # 1. Executar suite completa de testes
-pnpm test
+npm run test
 
 # 2. Verificar cobertura de código
-pnpm test:coverage
+npm run test:coverage
 
 # 3. Corrigir qualquer falha identificada
 # - Testes quebrados
@@ -1444,24 +1453,25 @@ const mockStripeClient = {
 
 ## ⚠️ Boas Práticas
 
-1. **Sempre consulte MCP servers** antes de implementar (Supabase, Stripe, Nuxt)
-2. **Escreva testes** para toda nova funcionalidade
-3. **Execute testes** ao final de cada desenvolvimento
-4. **Use TypeScript** para tipagem forte
-5. **Implemente autenticação** em funcionalidades que necessitam
-6. **Verifique RLS policies** para segurança de dados
-7. **Nunca exponha chaves Stripe** no client-side
-8. **Use sempre HTTPS** em produção para pagamentos
-9. **Implemente webhooks** para eventos Stripe assíncronos
-10. **Teste responsividade** em diferentes dispositivos
-11. **Use ESLint** para manter código consistente
-12. **Documente composables** e componentes complexos
-13. **Implemente loading states** para melhor UX
-14. **Use error handling** adequado em pagamentos
-15. **Otimize queries** Supabase para performance
-16. **Mantenha cobertura > 80%** em todos os testes
-17. **Nunca delete o arquivo .env local** - O arquivo `.env` contém variáveis de ambiente específicas do ambiente de desenvolvimento local. Este arquivo não deve ser removido ou modificado sem necessidade absoluta.
-18. **Sempre execute testes após mudanças em YAML ou Dockerfile** - Modificações em workflows GitHub Actions, Dockerfiles ou arquivos de configuração de infraestrutura podem quebrar builds e deploys. Execute testes locais e valide a sintaxe antes de commitar.
+1. **⚠️ IMPORTANTE:** Use sempre `npm` como gerenciador de pacotes - nunca `pnpm`, `yarn` ou outros
+2. **Sempre consulte MCP servers** antes de implementar (Supabase, Stripe, Nuxt)
+4. **Escreva testes** para toda nova funcionalidade
+5. **Execute testes** ao final de cada desenvolvimento
+6. **Use TypeScript** para tipagem forte
+7. **Implemente autenticação** em funcionalidades que necessitam
+8. **Verifique RLS policies** para segurança de dados
+9. **Nunca exponha chaves Stripe** no client-side
+10. **Use sempre HTTPS** em produção para pagamentos
+11. **Implemente webhooks** para eventos Stripe assíncronos
+12. **Teste responsividade** em diferentes dispositivos
+13. **Use ESLint** para manter código consistente
+14. **Documente composables** e componentes complexos
+15. **Implemente loading states** para melhor UX
+16. **Use error handling** adequado em pagamentos
+17. **Otimize queries** Supabase para performance
+18. **Mantenha cobertura > 80%** em todos os testes
+19. **Nunca delete o arquivo .env local** - O arquivo `.env` contém variáveis de ambiente específicas do ambiente de desenvolvimento local. Este arquivo não deve ser removido ou modificado sem necessidade absoluta.
+20. **Sempre execute testes após mudanças em YAML ou Dockerfile** - Modificações em workflows GitHub Actions, Dockerfiles ou arquivos de configuração de infraestrutura podem quebrar builds e deploys. Execute testes locais e valide a sintaxe antes de commitar.
 
 ### Testes Após Modificações em Arquivos de Infraestrutura
 
