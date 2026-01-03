@@ -14,7 +14,22 @@ interface RegisterData {
 }
 
 const supabase = useSupabaseClient()
+const user = useSupabaseUser()
 const toast = useToast()
+
+// Redirecionar se já estiver logado
+watch(user, (newUser) => {
+  if (newUser) {
+    navigateTo('/', { replace: true })
+  }
+}, { immediate: true })
+
+// Verificação inicial ao montar o componente
+onMounted(() => {
+  if (user.value) {
+    navigateTo('/', { replace: true })
+  }
+})
 
 // Estado para alternar entre login e cadastro
 const isLogin = ref(true)

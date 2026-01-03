@@ -1,80 +1,5 @@
-<script setup lang="ts">
-const user = useSupabaseUser()
-const supabase = useSupabaseClient()
-const toast = useToast()
-
-const handleLogout = async () => {
-  try {
-    const { error } = await supabase.auth.signOut()
-    if (error) throw error
-
-    toast.add({
-      title: 'Logout realizado',
-      description: 'Você foi desconectado com sucesso.',
-      color: 'success'
-    })
-
-    await navigateTo('/login')
-  } catch (error: unknown) {
-    const message = error && typeof error === 'object' && 'message' in error ? (error as { message: string }).message : undefined
-    toast.add({
-      title: 'Erro',
-      description: message || 'Erro ao fazer logout',
-      color: 'error'
-    })
-  }
-}
-</script>
-
 <template>
-  <div>
-    <!-- Barra de navegação superior -->
-    <UHeader>
-      <template #left>
-        <UButton
-          to="/"
-          variant="ghost"
-          icon="i-lucide-home"
-          size="sm"
-        >
-          Início
-        </UButton>
-      </template>
-
-      <template #right>
-        <div
-          v-if="user"
-          class="flex items-center gap-4"
-        >
-          <span class="text-sm text-gray-600 dark:text-gray-400">
-            Olá, {{ user.email }}
-          </span>
-          <UButton
-            variant="outline"
-            size="sm"
-            icon="i-lucide-log-out"
-            @click="handleLogout"
-          >
-            Sair
-          </UButton>
-        </div>
-
-        <div
-          v-else
-          class="flex items-center gap-2"
-        >
-          <UButton
-            to="/login"
-            variant="outline"
-            size="sm"
-          >
-            Entrar
-          </UButton>
-        </div>
-      </template>
-    </UHeader>
-
-    <UPageHero
+  <UPageHero
       title="Nuxt Starter Template"
       description="A production-ready starter template powered by Nuxt UI. Build beautiful, accessible, and performant applications in minutes, not hours."
       :links="[{
@@ -146,5 +71,4 @@ const handleLogout = async () => {
         }]"
       />
     </UPageSection>
-  </div>
 </template>
