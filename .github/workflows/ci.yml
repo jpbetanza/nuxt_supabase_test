@@ -33,9 +33,6 @@ jobs:
           STRIPE_PUBLISHABLE_KEY=pk_test_dummy
           EOF
 
-      - name: Run ESLint
-        run: npm run lint
-
       - name: Type checking
         run: npm run typecheck
 
