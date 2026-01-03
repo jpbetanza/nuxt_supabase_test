@@ -27,42 +27,7 @@ useSeoMeta({
 
 <template>
   <UApp>
-    <UHeader>
-      <template #left>
-        <NuxtLink
-          to="/"
-          class="flex items-center space-x-2"
-        >
-          <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <UIcon
-              name="i-lucide-zap"
-              class="w-5 h-5 text-white dark:text-white"
-            />
-          </div>
-          <span class="font-semibold text-lg">Plataforma SaaS</span>
-        </NuxtLink>
-      </template>
-
-      <template #right>
-        <UColorModeButton />
-
-        <UButton
-          to="/login"
-          variant="subtle"
-          size="sm"
-        >
-          Entrar
-        </UButton>
-
-        <UButton
-          to="/login"
-          color="primary"
-          size="sm"
-        >
-          Começar
-        </UButton>
-      </template>
-    </UHeader>
+    <AppHeader />
 
     <UMain>
       <NuxtPage />

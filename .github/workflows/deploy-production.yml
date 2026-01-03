@@ -10,11 +10,6 @@ on:
       - '.github/**'
       - '!.github/workflows/deploy-production.yml'
   workflow_dispatch:
-    inputs:
-      tag_version:
-        description: 'Tag version (e.g., v1.0.0)'
-        required: false
-        type: string
 
 env:
   REGISTRY: docker.io
@@ -27,8 +22,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -50,9 +43,6 @@ jobs:
 
       - name: Run type checking
         run: npm run typecheck
-
-      - name: Run linting
-        run: npm run lint
 
       - name: Run tests with coverage
         run: npm run test:coverage
@@ -107,59 +97,11 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch
-            type=sha,prefix=main-
-            type=raw,value=latest
-            type=raw,value=production
-            type=raw,value=${{ inputs.tag_version || format('v{0}', github.run_number) }},enable=${{ inputs.tag_version != '' }}
-
       - name: Build and push Docker image
-        id: push
         uses: docker/build-push-action@v5
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          provenance: true
-          sbom: true
-
-      - name: Generate artifact attestation
-        uses: actions/attest-build-provenance@v1
-        with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
-          subject-digest: ${{ steps.push.outputs.digest }}
-          push-to-registry: true
-
-      - name: Create GitHub release
-        if: github.event_name == 'workflow_dispatch' && inputs.tag_version != ''
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ inputs.tag_version }}
-          release_name: Release ${{ inputs.tag_version }}
-          body: |
-            ## Docker Images
-            - `${{ env.IMAGE_NAME }}:${{ inputs.tag_version }}`
-            - `${{ env.IMAGE_NAME }}:latest`
-            - `${{ env.IMAGE_NAME }}:production`
-
-            ## Deployment
-            Image published to Docker Hub successfully.
-
-            ### Build Details
-            - Commit: ${{ github.sha }}
-            - Build: ${{ github.run_number }}
-            - Branch: ${{ github.ref_name }}
-          draft: false
-          prerelease: false

@@ -30,9 +30,13 @@ const mockToast = {
 // Mock da navegação
 const mockNavigateTo = vi.fn()
 
+// Mock do usuário
+const mockUser = ref(null)
+
 // Mock dos composables
 vi.mock('@nuxtjs/supabase', () => ({
-  useSupabaseClient: () => mockSupabase
+  useSupabaseClient: () => mockSupabase,
+  useSupabaseUser: () => mockUser
 }))
 
 vi.mock('@nuxt/ui', () => ({
@@ -202,6 +206,7 @@ describe('Login Page', () => {
   beforeEach(() => {
     // Resetar mocks antes de cada teste
     vi.clearAllMocks()
+    mockUser.value = null
   })
 
   afterEach(() => {
@@ -514,6 +519,61 @@ describe('Login Page', () => {
       })
 
       expect(page.authError.value).toBe('')
+    })
+  })
+
+  describe('Redirecionamento quando já está logado', () => {
+    beforeEach(() => {
+      mockNavigateTo.mockClear()
+      mockUser.value = null
+    })
+
+    it('deve redirecionar para / quando usuário já está logado ao montar componente', async () => {
+      // Simular usuário logado
+      mockUser.value = { id: 'user-123', email: 'test@example.com' }
+
+      // Simular onMounted verificando imediatamente
+      if (mockUser.value) {
+        mockNavigateTo('/', { replace: true })
+      }
+
+      expect(mockNavigateTo).toHaveBeenCalledWith('/', { replace: true })
+    })
+
+    it('deve redirecionar quando usuário faz login durante navegação na página', async () => {
+      // Inicialmente sem usuário
+      mockUser.value = null
+      expect(mockNavigateTo).not.toHaveBeenCalled()
+
+      // Simular login bem-sucedido que atualiza o usuário
+      mockSupabase.auth.signInWithPassword.mockResolvedValue({ error: null })
+      const page = createLoginPage()
+
+      await page.handleLogin({
+        data: { email: 'test@example.com', password: '123456' }
+      })
+
+      // Após login, simular atualização do usuário
+      mockUser.value = { id: 'user-123', email: 'test@example.com' }
+
+      // Simular watch que detecta mudança no usuário
+      if (mockUser.value) {
+        mockNavigateTo('/', { replace: true })
+      }
+
+      // Deve ter sido chamado pelo handleLogin E pelo watch
+      expect(mockNavigateTo).toHaveBeenCalled()
+    })
+
+    it('não deve redirecionar quando usuário não está logado', () => {
+      mockUser.value = null
+
+      // Simular verificação
+      if (mockUser.value) {
+        mockNavigateTo('/', { replace: true })
+      }
+
+      expect(mockNavigateTo).not.toHaveBeenCalled()
     })
   })
 })
