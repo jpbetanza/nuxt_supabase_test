@@ -22,6 +22,9 @@ RUN npm run build
 # Stage de produção
 FROM nginx:alpine AS production
 
+# Instalar wget para healthcheck (leve e disponível em todas as arquiteturas)
+RUN apk add --no-cache wget
+
 # Copiar configuração customizada do nginx (se existir)
 # COPY nginx.conf /etc/nginx/nginx.conf
 
@@ -47,9 +50,9 @@ RUN echo 'server {\
 # Expor porta 80
 EXPOSE 80
 
-# Health check
+# Health check (usando wget para verificar se o servidor responde)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost/ || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost/ || exit 1
 
 # Comando para iniciar nginx
 CMD ["nginx", "-g", "daemon off;"]
