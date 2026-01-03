@@ -67,12 +67,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: nuxt-build
-          path: .output/
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -95,6 +89,7 @@ jobs:
             type=raw,value=homologacao
 
       - name: Build and push Docker image
+        id: push
         uses: docker/build-push-action@v5
         with:
           context: .
