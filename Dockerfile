@@ -1,17 +1,14 @@
 # Multi-stage build para Nuxt.js SPA
-FROM node:20-alpine AS base
-
-# Instalar pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+FROM node:22-alpine AS base
 
 # Definir diretório de trabalho
 WORKDIR /app
 
 # Copiar arquivos de configuração de dependências
-COPY package.json pnpm-lock.yaml ./
+COPY package.json package-lock.json ./
 
 # Instalar dependências
-RUN pnpm install --frozen-lockfile
+RUN npm ci
 
 # Stage de build
 FROM base AS builder
@@ -20,7 +17,7 @@ FROM base AS builder
 COPY . .
 
 # Build da aplicação
-RUN pnpm build
+RUN npm run build
 
 # Stage de produção
 FROM nginx:alpine AS production

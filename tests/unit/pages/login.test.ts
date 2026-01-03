@@ -111,8 +111,17 @@ const createLoginPage = () => {
         color: 'success'
       })
 
-      // Redirecionar para a página inicial
-      mockNavigateTo('/')
+      // Aguardar um pequeno delay para garantir que a sessão seja estabelecida
+      await new Promise(resolve => setTimeout(resolve, 100))
+
+      mockToast.add({
+        title: 'Sucesso!',
+        description: 'Login realizado com sucesso.',
+        color: 'success'
+      })
+
+      // Redirecionar para a página inicial imediatamente
+      mockNavigateTo('/', { replace: true })
     } catch (error: unknown) {
       const message = error && typeof error === 'object' && 'message' in error ? (error as { message: string }).message : undefined
       authError.value = message || 'Erro ao fazer login'
@@ -322,7 +331,7 @@ describe('Login Page', () => {
         description: 'Login realizado com sucesso.',
         color: 'success'
       })
-      expect(mockNavigateTo).toHaveBeenCalledWith('/')
+      expect(mockNavigateTo).toHaveBeenCalledWith('/', { replace: true })
     })
 
     it('deve mostrar erro quando login falha', async () => {

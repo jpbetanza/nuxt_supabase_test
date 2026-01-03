@@ -2,6 +2,15 @@
 
 Este documento serve como referência para AIs desenvolvendo novas funcionalidades neste aplicativo Nuxt.js que utiliza Nuxt UI como sistema de componentes e Supabase como banco de dados e autenticador.
 
+## ⚠️ IMPORTANTE: Gerenciador de Pacotes
+
+**Este projeto utiliza exclusivamente `npm` como gerenciador de pacotes. NÃO use `pnpm`, `yarn` ou qualquer outro gerenciador.**
+
+- ✅ **Correto:** `npm install`, `npm run build`, `npm run test`
+- ❌ **Errado:** `pnpm install`, `pnpm build`, `pnpm test`
+
+**Motivo:** O Dockerfile e workflows CI/CD estão configurados especificamente para `npm` e usam `package-lock.json`. Usar outro gerenciador de pacotes causará conflitos e falhas no build.
+
 ## 📋 Visão Geral do Projeto
 
 **Stack Tecnológica:**
@@ -201,6 +210,196 @@ const signIn = async () => {
   </UForm>
 </template>
 ```
+
+## 🔐 Sistema de Autenticação e Confirmação de Email
+
+### Fluxo de Confirmação de Email
+
+O projeto utiliza o sistema de autenticação do **Supabase** com confirmação de email obrigatória. O fluxo funciona da seguinte forma:
+
+#### 1. **Cadastro de Usuário**
+```typescript
+// Na página de login (login.vue)
+const { error } = await supabase.auth.signUp({
+  email: payload.data.email,
+  password: payload.data.password,
+  options: {
+    emailRedirectTo: `${window.location.origin}/confirm` // URL de redirecionamento obrigatória
+  }
+})
+```
+
+#### 2. **Envio de Email de Confirmação**
+- Supabase envia automaticamente um email com link de confirmação
+- O link contém tokens temporários na URL (access_token, refresh_token, type)
+- **IMPORTANTE:** Em desenvolvimento, os emails podem não ser enviados automaticamente
+
+#### 3. **Página de Confirmação (`/confirm`)**
+```typescript
+// Verifica automaticamente se há erros na URL
+const checkForUrlErrors = () => {
+  const hash = window.location.hash
+  if (hash.includes('error=')) {
+    // Trata links expirados ou inválidos
+    // Ex: #error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired
+  }
+}
+
+// Verifica periodicamente se o usuário foi confirmado
+const startConfirmationCheck = () => {
+  // Polling por até 30 segundos para detectar confirmação automática
+  // Verifica getSession() e campos email_confirmed_at/confirmed_at
+}
+```
+
+### Configuração Obrigatória no Supabase Dashboard
+
+#### **Site URL**
+- **Localização:** Authentication → Settings → Site URL
+- **Valor desenvolvimento:** `http://localhost:3000`
+- **Valor produção:** `https://seudominio.com`
+
+#### **Redirect URLs**
+- **Localização:** Authentication → Settings → Redirect URLs
+- **URLs obrigatórias:**
+  - `http://localhost:3000/confirm` (desenvolvimento)
+  - `https://seudominio.com/confirm` (produção)
+
+#### **Email Templates**
+- **Localização:** Authentication → Email Templates
+- **Importante:** Verificar se os templates estão ativos
+- **SMTP:** Configurar se usar SMTP customizado
+
+### Problemas Comuns e Soluções
+
+#### **1. Link Expirado (`otp_expired`)**
+**Sintomas:**
+- URL contém: `#error=access_denied&error_code=otp_expired`
+- Mensagem: "Email link is invalid or has expired"
+
+**Soluções:**
+- Solicitar novo link via `supabase.auth.resend()`
+- Verificar configuração de expiração no Supabase Dashboard
+- Orientar usuário a verificar caixa de spam
+
+#### **2. Sessão Não Encontrada**
+**Sintomas:**
+- Log: "No session found"
+- Confirmação falha mesmo com link válido
+
+**Soluções:**
+- Verificar se o usuário existe no banco de dados
+- Verificar campos `email_confirmed_at` ou `confirmed_at`
+- Usar `getSession()` ao invés de apenas `getUser()`
+- Implementar polling para detectar mudanças assíncronas
+
+#### **3. Emails Não Enviados em Desenvolvimento**
+**Sintomas:**
+- Usuário criado no banco, mas nenhum email recebido
+
+**Soluções:**
+- **Método 1:** Usar Supabase Dashboard para enviar confirmação manual
+  1. Ir para Authentication → Users
+  2. Encontrar o usuário
+  3. Clicar "Send email confirmation"
+
+- **Método 2:** Configurar SMTP local (recomendado para desenvolvimento)
+- **Método 3:** Usar CLI do Supabase para testar emails
+
+#### **4. Erro "process.dev"**
+**Sintomas:**
+- Erro: `Cannot read properties of undefined (reading 'dev')`
+
+**Solução:**
+```typescript
+// ❌ Errado (Nuxt 2)
+const isDev = process.dev
+
+// ✅ Correto (Nuxt 3)
+const isDev = import.meta.env.DEV
+```
+
+### Debugging e Monitoramento
+
+#### **Logs Essenciais**
+```typescript
+// Em confirm.vue - logs de debug
+console.log('URL:', window.location.href)
+console.log('Hash:', window.location.hash)
+console.log('Search:', window.location.search)
+
+// Verificar sessão atual
+const { data: { session }, error } = await supabase.auth.getSession()
+console.log('Session:', session)
+console.log('User confirmed:', session?.user.email_confirmed_at || session?.user.confirmed_at)
+```
+
+#### **Console do Browser**
+- Abrir F12 → Console durante o processo de confirmação
+- Verificar logs de erro e informações de debug
+- Monitorar chamadas de rede para `/auth/v1/verify`
+
+#### **Supabase Dashboard**
+- **Users:** Verificar status de confirmação dos usuários
+- **Logs:** Verificar tentativas de autenticação
+- **Auth Settings:** Confirmar configurações de URL e redirects
+
+### Melhores Práticas
+
+#### **1. Tratamento de Erros Robusto**
+```typescript
+// Sempre verificar múltiplos campos de confirmação
+const isConfirmed = user.email_confirmed_at || user.confirmed_at
+
+// Tratar links expirados graciosamente
+if (url.includes('otp_expired')) {
+  // Mostrar opção de reenvio
+}
+```
+
+#### **2. UX Considerada**
+- Loading states durante verificação
+- Mensagens claras sobre o status
+- Opções de retry e reenvio
+- Debug info em modo desenvolvimento
+
+#### **3. Segurança**
+- Nunca logar tokens de autenticação
+- Verificar validade dos links antes de processar
+- Implementar timeouts para polling
+- Limpar timers adequadamente
+
+#### **4. Configuração de Ambiente**
+```bash
+# .env (desenvolvimento)
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_ANON_KEY=your-anon-key-here
+
+# Verificar se as variáveis estão carregadas
+console.log('Supabase URL:', useRuntimeConfig().public.supabase.url)
+```
+
+### Checklist de Implementação
+
+#### **Para Novas Funcionalidades de Auth:**
+- [ ] Configurar Site URL no Supabase Dashboard
+- [ ] Adicionar Redirect URLs necessárias
+- [ ] Testar fluxo completo de cadastro → confirmação
+- [ ] Verificar tratamento de links expirados
+- [ ] Implementar logs de debug apropriados
+- [ ] Testar em diferentes navegadores
+- [ ] Verificar funcionamento em produção
+
+#### **Debugging de Problemas:**
+- [ ] Verificar console do browser por erros
+- [ ] Checar Supabase Dashboard por status do usuário
+- [ ] Testar envio manual de confirmação
+- [ ] Verificar configurações de URL no dashboard
+- [ ] Confirmar variáveis de ambiente
+
+---
+
+**Autenticação Supabase:** Sistema crítico que requer configuração cuidadosa no dashboard e tratamento robusto de erros. Sempre teste o fluxo completo e tenha opções de fallback para links expirados.
 
 ## 🎨 Padrões de UI/UX
 
@@ -814,16 +1013,16 @@ Este projeto utiliza **@nuxt/eslint** com regras específicas para Vue.js e Type
 
 ```bash
 # Verificar todos os arquivos
-pnpm lint
+npm run lint
 
 # Corrigir automaticamente erros corrigíveis
-pnpm lint -- --fix
+npm run lint -- --fix
 
 # Verificar arquivo específico
-node_modules/.bin/eslint app/pages/login.vue
+npx eslint app/pages/login.vue
 
 # Corrigir arquivo específico
-node_modules/.bin/eslint --fix app/pages/login.vue
+npx eslint --fix app/pages/login.vue
 ```
 
 ### Boas Práticas de Formatação
@@ -863,7 +1062,7 @@ const handleSubmit = async (payload: FormSubmitEvent<UserData>) => {
 ```
 
 #### Prevenção de Erros Comuns
-- ✅ Sempre execute `pnpm lint` antes de commitar
+- ✅ Sempre execute `npm run lint` antes de commitar
 - ✅ Use `--fix` para correções automáticas quando possível
 - ✅ Mantenha atributos de componentes em linhas separadas
 - ✅ Evite quebras de linha extras em elementos HTML
@@ -874,7 +1073,7 @@ O ESLint é executado automaticamente nos pipelines de CI/CD. Para passar nos te
 
 1. ✅ Corrija todos os erros marcados como "error"
 2. ✅ Considere corrigir warnings (marcados como "warning")
-3. ✅ Execute `pnpm lint` localmente antes de fazer push
+3. ✅ Execute `npm run lint` localmente antes de fazer push
 
 ---
 
@@ -917,8 +1116,8 @@ mcp_supabase_get_advisors project_id security
 
 ### Build Commands
 ```bash
-pnpm build    # Build para produção
-pnpm preview  # Preview local do build
+npm run build    # Build para produção
+npm run preview  # Preview local do build
 ```
 
 ### Variáveis de Ambiente
@@ -1123,19 +1322,19 @@ beforeAll(() => {
 
 ```bash
 # Executar todos os testes
-pnpm test
+npm run test
 
 # Executar testes em modo watch
-pnpm test:watch
+npm run test:watch
 
 # Executar testes com cobertura
-pnpm test:coverage
+npm run test:coverage
 
 # Executar testes de um arquivo específico
-pnpm test UserCard.test.ts
+npm run test UserCard.test.ts
 
 # Executar testes unitários apenas
-pnpm test:unit
+npm run test:unit
 ```
 
 ### Workflow de Testes
@@ -1146,22 +1345,22 @@ pnpm test:unit
 # Criar arquivo .test.ts correspondente
 
 # 2. Executar testes (devem falhar inicialmente)
-pnpm test
+npm run test
 
 # 3. Implementar funcionalidade
 # Escrever código até os testes passarem
 
 # 4. Refatorar e executar testes novamente
-pnpm test
+npm run test
 ```
 
 #### Após Implementar
 ```bash
 # 1. Executar suite completa de testes
-pnpm test
+npm run test
 
 # 2. Verificar cobertura de código
-pnpm test:coverage
+npm run test:coverage
 
 # 3. Corrigir qualquer falha identificada
 # - Testes quebrados
@@ -1254,22 +1453,62 @@ const mockStripeClient = {
 
 ## ⚠️ Boas Práticas
 
-1. **Sempre consulte MCP servers** antes de implementar (Supabase, Stripe, Nuxt)
-2. **Escreva testes** para toda nova funcionalidade
-3. **Execute testes** ao final de cada desenvolvimento
-4. **Use TypeScript** para tipagem forte
-5. **Implemente autenticação** em funcionalidades que necessitam
-6. **Verifique RLS policies** para segurança de dados
-7. **Nunca exponha chaves Stripe** no client-side
-8. **Use sempre HTTPS** em produção para pagamentos
-9. **Implemente webhooks** para eventos Stripe assíncronos
-10. **Teste responsividade** em diferentes dispositivos
-11. **Use ESLint** para manter código consistente
-12. **Documente composables** e componentes complexos
-13. **Implemente loading states** para melhor UX
-14. **Use error handling** adequado em pagamentos
-15. **Otimize queries** Supabase para performance
-16. **Mantenha cobertura > 80%** em todos os testes
+1. **⚠️ IMPORTANTE:** Use sempre `npm` como gerenciador de pacotes - nunca `pnpm`, `yarn` ou outros
+2. **Sempre consulte MCP servers** antes de implementar (Supabase, Stripe, Nuxt)
+4. **Escreva testes** para toda nova funcionalidade
+5. **Execute testes** ao final de cada desenvolvimento
+6. **Use TypeScript** para tipagem forte
+7. **Implemente autenticação** em funcionalidades que necessitam
+8. **Verifique RLS policies** para segurança de dados
+9. **Nunca exponha chaves Stripe** no client-side
+10. **Use sempre HTTPS** em produção para pagamentos
+11. **Implemente webhooks** para eventos Stripe assíncronos
+12. **Teste responsividade** em diferentes dispositivos
+13. **Use ESLint** para manter código consistente
+14. **Documente composables** e componentes complexos
+15. **Implemente loading states** para melhor UX
+16. **Use error handling** adequado em pagamentos
+17. **Otimize queries** Supabase para performance
+18. **Mantenha cobertura > 80%** em todos os testes
+19. **Nunca delete o arquivo .env local** - O arquivo `.env` contém variáveis de ambiente específicas do ambiente de desenvolvimento local. Este arquivo não deve ser removido ou modificado sem necessidade absoluta.
+20. **Sempre execute testes após mudanças em YAML ou Dockerfile** - Modificações em workflows GitHub Actions, Dockerfiles ou arquivos de configuração de infraestrutura podem quebrar builds e deploys. Execute testes locais e valide a sintaxe antes de commitar.
+
+### Testes Após Modificações em Arquivos de Infraestrutura
+
+#### Workflows GitHub Actions (.github/workflows/*.yml)
+```bash
+# Verificar sintaxe do workflow (opcional - GitHub valida automaticamente)
+# Fazer push para branch de teste e verificar se o workflow executa
+git push origin feature/nova-feature:test-branch
+
+# Monitorar execução no GitHub Actions
+# Verificar se jobs executam na ordem correta
+# Validar se artifacts são criados e transferidos entre jobs
+```
+
+#### Dockerfile
+```bash
+# Testar build local
+docker build -t test-image .
+
+# Verificar se container inicia corretamente
+docker run --rm test-image
+
+# Validar se aplicação funciona dentro do container
+docker run -p 3000:3000 test-image
+
+# Limpar imagens de teste
+docker rmi test-image
+```
+
+#### Arquivos de Configuração
+```bash
+# Validar sintaxe YAML
+yamllint .github/workflows/*.yml
+
+# Verificar se variáveis de ambiente estão definidas
+# Testar configurações em ambiente local antes do deploy
+```
 
 ---
 
