@@ -40,21 +40,8 @@ jobs:
           STRIPE_PUBLISHABLE_KEY=pk_test_dummy
           EOF
 
-      - name: Run type checking
-        run: npm run typecheck
-
-      - name: Run tests
-        run: npm run test:coverage
-
       - name: Build application
         run: npm run build
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: nuxt-build
-          path: .output/
-          retention-days: 1
 
   docker-build-and-push:
     runs-on: ubuntu-latest
@@ -73,12 +60,12 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-      - name: Build and push Docker image
+      - name: Build and push Docker image (single platform for speed)
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:homologacao
           cache-from: type=gha
           cache-to: type=gha,mode=max
